@@ -43,8 +43,33 @@ In public sector procurement across India, different CPSEs procure identical or 
 | `created_at` | `DateTime` | Record creation timestamp (UTC) |
 | `updated_at` | `DateTime` | Record last update timestamp (UTC) |
 
-### Key Database Constraint
-- **Composite Unique Constraint**: `(cpse, material_code)` ensures codes are unique within each CPSE, but different CPSEs can independently use identical code strings.
+### Key Database Constraints
+- **Materials**: `(cpse, material_code)` composite unique constraint ensures codes are unique within each CPSE, but different CPSEs can independently use identical code strings.
+- **Material Matches**: `(material_a_id, material_b_id)` unique constraint with canonical ordering (`material_a_id < material_b_id`) prevents duplicate or reversed pair recommendations.
+
+---
+
+## Material Match Model Specification (`material_matches`)
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `Integer` | Primary Key, Auto-increment |
+| `material_a_id` | `Integer` | Foreign Key (`materials.id`, ON DELETE CASCADE), canonical min ID |
+| `material_b_id` | `Integer` | Foreign Key (`materials.id`, ON DELETE CASCADE), canonical max ID |
+| `semantic_score` | `Float` | Cosine similarity of domain embeddings (0 - 100) |
+| `technical_score` | `Float` | Deterministic attribute compatibility (0 - 100) |
+| `category_score` | `Float` | Category domain compatibility (0 - 100) |
+| `uom_score` | `Float` | Unit of measurement compatibility (0 - 100) |
+| `final_confidence` | `Float` | Weighted composite confidence score (0 - 100) |
+| `classification` | `String(50)` | `HIGH_CONFIDENCE_MATCH`, `REVIEW_REQUIRED`, `LOW_CONFIDENCE` |
+| `status` | `String(50)` | Workflow status: `PENDING`, `APPROVED`, `REJECTED` |
+| `common_material_code` | `String(100)` | Common National Material Code assigned upon approval |
+| `reasons` | `JSON` | List of supporting explainability explanations |
+| `warnings` | `JSON` | List of warnings or discrepancies |
+| `attribute_comparison` | `JSON` | Detailed dictionary of attribute evaluations |
+| `rejection_reason` | `Text` | Reviewer justification if rejected |
+| `created_at` | `DateTime` | Recommendation generation timestamp |
+| `reviewed_at` | `DateTime` | Timestamp of human approval or rejection |
 
 ---
 
@@ -58,20 +83,34 @@ MATPULSE/
 │   ├── database.py          # SQLAlchemy SQLite engine & session dependency
 │   ├── models/              # SQLAlchemy database models
 │   │   ├── __init__.py
-│   │   └── material.py      # Material master ORM model
+│   │   ├── material.py      # Material master ORM model
+│   │   └── match.py         # Material match recommendation ORM model
 │   ├── schemas/             # Pydantic v2 validation models
 │   │   ├── __init__.py
-│   │   └── material.py      # Base, Create, Update, Bulk, Response, Stats
+│   │   ├── material.py      # Material CRUD schemas
+│   │   └── matching.py      # Matching, batch, and review workflow schemas
 │   ├── crud/                # Data access layer
 │   │   ├── __init__.py
-│   │   └── material.py      # Querying, filtering, and cross-CPSE stats
+│   │   ├── material.py      # Material CRUD & stats
+│   │   └── match.py         # Match recommendation CRUD & workflow actions
+│   ├── services/            # AI matching services
+│   │   ├── __init__.py
+│   │   ├── normalizer.py    # Industrial text preprocessing
+│   │   ├── attribute_extractor.py # Regex/domain attribute extraction
+│   │   ├── matcher.py       # Pairwise AI scoring & validation
+│   │   └── candidate_matcher.py   # Cross-CPSE candidate generation & ranking
 │   ├── routers/             # API routes
 │   │   ├── __init__.py
-│   │   └── material.py      # REST endpoints (/api/v1/materials)
+│   │   ├── material.py      # Material endpoints (/api/v1/materials)
+│   │   └── matching.py      # Matching & workflow endpoints (/api/v1/matching)
 │   └── main.py              # Application entrypoint & CORS configuration
 ├── tests/
 │   ├── __init__.py
-│   └── test_materials.py    # Automated test suite using in-memory SQLite
+│   ├── conftest.py          # Shared test fixtures & in-memory SQLite DB
+│   ├── test_materials.py    # Material master CRUD tests
+│   ├── test_matching.py     # Pairwise AI matching tests
+│   ├── test_batch_matching.py # Candidate generation & ranking tests
+│   └── test_review_workflow.py # Persistence & human review workflow tests
 ├── seed.py                  # Demo synthetic cross-CPSE data seeder
 ├── requirements.txt         # Core dependencies
 └── README.md                # Documentation & instructions
@@ -143,3 +182,16 @@ Open your browser and navigate to:
 | `GET` | `/api/v1/materials/{id}` | Retrieve single material details |
 | `PUT` | `/api/v1/materials/{id}` | Update material (assign common code, update matching status) |
 | `DELETE` | `/api/v1/materials/{id}` | Remove material |
+
+### AI Matching & Review Workflow Endpoints (`/api/v1/matching`)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/v1/matching/compare` | Pairwise comparison of two materials by ID with explainable scores |
+| `POST` | `/api/v1/matching/batch` | Read-only batch matching with candidate generation and ranking (`top_k`, `min_confidence`, `cpse`) |
+| `POST` | `/api/v1/matching/generate` | Generate and persist AI match recommendations as `PENDING` into `material_matches` table |
+| `GET` | `/api/v1/matching/review-queue` | Retrieve review queue with filters (`status`, `min_confidence`, `classification`, `cpse`, pagination) |
+| `GET` | `/api/v1/matching/{match_id}` | Detailed inspection of recommendation with full materials and metrics |
+| `POST` | `/api/v1/matching/{match_id}/approve` | Approve recommendation and assign Common National Material Code to both materials |
+| `POST` | `/api/v1/matching/{match_id}/reject` | Reject recommendation with optional reason (preserves master records intact) |
+

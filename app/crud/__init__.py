@@ -10,6 +10,14 @@ from app.crud.material import (
     delete_material,
     get_harmonization_stats,
 )
+from app.crud.match import (
+    get_match,
+    get_match_by_pair,
+    get_review_queue,
+    create_match_record,
+    approve_match,
+    reject_match,
+)
 
 __all__ = [
     "get_material",
@@ -22,4 +30,10 @@ __all__ = [
     "update_material",
     "delete_material",
     "get_harmonization_stats",
+    "get_match",
+    "get_match_by_pair",
+    "get_review_queue",
+    "create_match_record",
+    "approve_match",
+    "reject_match",
 ]

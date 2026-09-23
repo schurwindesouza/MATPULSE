@@ -1,5 +1,7 @@
+from datetime import datetime
 from typing import Optional, Dict, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+from app.schemas.material import MaterialResponse
 
 
 class MatchingCompareRequest(BaseModel):
@@ -57,3 +59,75 @@ class BatchMatchingResponse(BaseModel):
     total_materials: int = Field(..., description="Total materials considered")
     pairs_evaluated: int = Field(..., description="Total unique cross-CPSE candidate pairs evaluated")
     results: List[MaterialBatchMatchResult] = Field(..., description="Ranked matches per material")
+
+
+# --- Phase 4 Schemas: Persistence & Human Review Workflow ---
+
+class GenerateMatchesRequest(BaseModel):
+    top_k: int = Field(5, ge=1, le=50, description="Max candidate matches per material to consider")
+    min_confidence: float = Field(70.0, ge=0.0, le=100.0, description="Minimum confidence threshold to persist")
+
+
+class GenerateMatchesResponse(BaseModel):
+    matches_created: int = Field(..., description="New pending match recommendations created")
+    matches_skipped: int = Field(..., description="Candidate matches skipped due to deduplication or existing records")
+    total_candidates: int = Field(..., description="Total candidate matches above confidence threshold")
+
+
+class MaterialSummary(BaseModel):
+    id: int
+    cpse: str
+    material_code: str
+    description: str
+    category: Optional[str] = None
+    uom: Optional[str] = None
+    common_material_code: Optional[str] = None
+    matching_status: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MatchReviewQueueItem(BaseModel):
+    id: int
+    material_a: MaterialSummary
+    material_b: MaterialSummary
+    final_confidence: float
+    classification: str
+    status: str
+    common_material_code: Optional[str] = None
+    reasons: List[str] = Field(default_factory=list)
+    warnings: List[str] = Field(default_factory=list)
+    created_at: datetime
+    reviewed_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MatchDetailResponse(BaseModel):
+    id: int
+    status: str
+    final_confidence: float
+    classification: str
+    semantic_score: float
+    technical_score: float
+    category_score: float
+    uom_score: float
+    common_material_code: Optional[str] = None
+    attribute_comparison: Dict[str, str] = Field(default_factory=dict)
+    reasons: List[str] = Field(default_factory=list)
+    warnings: List[str] = Field(default_factory=list)
+    rejection_reason: Optional[str] = None
+    created_at: datetime
+    reviewed_at: Optional[datetime] = None
+    material_a: MaterialResponse
+    material_b: MaterialResponse
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ApproveMatchRequest(BaseModel):
+    common_material_code: str = Field(..., min_length=1, max_length=100, description="Assigned Common National Material Code (e.g. NMC-PIP-CS-50NB-40)")
+
+
+class RejectMatchRequest(BaseModel):
+    reason: Optional[str] = Field(None, description="Optional rejection explanation")
