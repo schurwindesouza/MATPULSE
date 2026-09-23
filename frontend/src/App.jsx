@@ -4,6 +4,9 @@ import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
 import MaterialsPage from './pages/MaterialsPage';
 import MatchingPage from './pages/MatchingPage';
+import ImportPage from './pages/ImportPage';
+import ReviewQueuePage from './pages/ReviewQueuePage';
+import CommonMaterialsPage from './pages/CommonMaterialsPage';
 import PlaceholderPage from './pages/PlaceholderPage';
 
 export default function App() {
@@ -17,28 +20,13 @@ export default function App() {
           {/* Materials Master Catalog */}
           <Route path="materials" element={<MaterialsPage />} />
 
+          {/* Live CPSE Dataset Import */}
+          <Route path="import" element={<ImportPage />} />
+
           {/* AI Material Matching Engine */}
           <Route path="matching" element={<MatchingPage />} />
-          <Route
-            path="review-queue"
-            element={
-              <PlaceholderPage
-                title="Human Review & Harmonization Queue"
-                description="Review pending AI recommendations, inspect technical discrepancies, approve matches with Common National Material Codes, or reject false candidates."
-                phase="Phase 8"
-              />
-            }
-          />
-          <Route
-            path="common-materials"
-            element={
-              <PlaceholderPage
-                title="Common National Material Codes"
-                description="Master catalog of standardized national material codes with linked CPSE catalog mappings and provenance tracking."
-                phase="Phase 9"
-              />
-            }
-          />
+          <Route path="review-queue" element={<ReviewQueuePage />} />
+          <Route path="common-materials" element={<CommonMaterialsPage />} />
           <Route
             path="analytics"
             element={

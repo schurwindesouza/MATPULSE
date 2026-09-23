@@ -7,6 +7,7 @@ import {
   CheckSquare,
   Layers,
   BarChart3,
+  UploadCloud,
   Server,
   Activity,
   ShieldCheck,
@@ -20,6 +21,7 @@ import materialService from '../services/materialService';
 const NAV_ITEMS = [
   { name: 'Dashboard', path: '/', icon: LayoutDashboard },
   { name: 'Materials', path: '/materials', icon: Boxes },
+  { name: 'Import Catalog', path: '/import', icon: UploadCloud },
   { name: 'AI Matching', path: '/matching', icon: GitCompare },
   { name: 'Review Queue', path: '/review-queue', icon: CheckSquare },
   { name: 'Common Materials', path: '/common-materials', icon: Layers },

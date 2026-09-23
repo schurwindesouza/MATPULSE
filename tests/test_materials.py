@@ -280,3 +280,93 @@ def test_harmonization_stats():
     assert stats["unmatched_count"] == 1
     assert stats["cpse_breakdown"] == {"BHEL": 1, "NTPC": 1, "ONGC": 1}
     assert stats["category_breakdown"] == {"Pipes": 2, "Valves": 1}
+
+
+def test_common_materials_catalog_endpoint():
+    """
+    Test GET /api/v1/materials/common-catalog:
+    - Lists Common National Material Codes with grouped CPSE mappings.
+    - Preserves original CPSE codes.
+    - Supports CPSE, category, and search filters.
+    """
+    client.post(
+        "/api/v1/materials/",
+        json={
+            "cpse": "BHEL",
+            "material_code": "BHL-CAT-01",
+            "description": "Carbon Steel Hex Bolt M20 x 120 Grade 8.8",
+            "category": "Fasteners",
+            "uom": "EA",
+            "common_material_code": "NMC-FAS-107-111",
+            "matching_status": "MATCHED",
+            "annual_quantity": 1000.0,
+            "approx_unit_price": 50.0,
+        },
+    )
+    client.post(
+        "/api/v1/materials/",
+        json={
+            "cpse": "SAIL",
+            "material_code": "SAI-CAT-01",
+            "description": "Hex Bolt M20 x 120 Carbon Steel Grade 8.8",
+            "category": "Fasteners",
+            "uom": "EA",
+            "common_material_code": "NMC-FAS-107-111",
+            "matching_status": "MATCHED",
+            "annual_quantity": 2000.0,
+            "approx_unit_price": 48.0,
+        },
+    )
+    client.post(
+        "/api/v1/materials/",
+        json={
+            "cpse": "NTPC",
+            "material_code": "NTP-CAT-02",
+            "description": "Seamless CS Pipe 50 NB Sch 40",
+            "category": "Pipes",
+            "uom": "MTR",
+            "common_material_code": "NMC-PIP-50NB",
+            "matching_status": "MATCHED",
+            "annual_quantity": 500.0,
+            "approx_unit_price": 400.0,
+        },
+    )
+
+    # 1. Fetch full catalog
+    res = client.get("/api/v1/materials/common-catalog")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["total_codes"] == 2
+    assert data["total_mapped_materials"] == 3
+
+    # Verify NMC-FAS-107-111 details
+    fas_item = next(i for i in data["items"] if i["common_material_code"] == "NMC-FAS-107-111")
+    assert fas_item["category"] == "Fasteners"
+    assert fas_item["mappings_count"] == 2
+    assert set(fas_item["linked_cpses"]) == {"BHEL", "SAIL"}
+    assert fas_item["total_annual_quantity"] == 3000.0
+    assert fas_item["estimated_spend"] == (1000.0 * 50.0) + (2000.0 * 48.0)
+
+    # Verify original CPSE codes are preserved in linked materials
+    codes = {m["material_code"] for m in fas_item["linked_materials"]}
+    assert codes == {"BHL-CAT-01", "SAI-CAT-01"}
+
+    # 2. Filter by CPSE
+    sail_res = client.get("/api/v1/materials/common-catalog?cpse=SAIL")
+    assert sail_res.status_code == 200
+    sail_data = sail_res.json()
+    assert sail_data["total_codes"] == 1
+    assert sail_data["items"][0]["common_material_code"] == "NMC-FAS-107-111"
+
+    # 3. Filter by Category
+    pipe_res = client.get("/api/v1/materials/common-catalog?category=Pipes")
+    assert pipe_res.status_code == 200
+    pipe_data = pipe_res.json()
+    assert pipe_data["total_codes"] == 1
+    assert pipe_data["items"][0]["common_material_code"] == "NMC-PIP-50NB"
+
+    # 4. Search filter
+    search_res = client.get("/api/v1/materials/common-catalog?search=107-111")
+    assert search_res.status_code == 200
+    assert search_res.json()["total_codes"] == 1
+

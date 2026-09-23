@@ -40,6 +40,9 @@ export default function MatchingPage() {
   // Selected match for analysis modal
   const [selectedMatchId, setSelectedMatchId] = useState(null);
 
+  // Pipeline summary statistics
+  const [pipelineStats, setPipelineStats] = useState(null);
+
   // Fetch matches from review queue
   const fetchMatches = useCallback(async () => {
     try {
@@ -59,9 +62,19 @@ export default function MatchingPage() {
     }
   }, [classificationFilter, cpseFilter, statusFilter]);
 
+  const fetchStats = useCallback(async () => {
+    try {
+      const data = await matchingService.getMatchingStats();
+      setPipelineStats(data);
+    } catch (err) {
+      console.error('Failed to load matching stats', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchMatches();
-  }, [fetchMatches]);
+    fetchStats();
+  }, [fetchMatches, fetchStats]);
 
   // Trigger batch generation
   const handleGenerateMatches = async () => {
@@ -76,8 +89,8 @@ export default function MatchingPage() {
       });
 
       setGenerationSummary(res);
-      // Refresh matches list
-      await fetchMatches();
+      // Refresh matches list and pipeline stats
+      await Promise.all([fetchMatches(), fetchStats()]);
     } catch (err) {
       setError(err.message || 'Failed to execute AI batch matching');
     } finally {
@@ -86,11 +99,11 @@ export default function MatchingPage() {
   };
 
   // Pipeline summary statistics
-  const totalCount = matches.length;
-  const highConfidenceCount = matches.filter(
+  const totalCount = pipelineStats?.total_recommendations ?? matches.length;
+  const highConfidenceCount = pipelineStats?.high_confidence_count ?? matches.filter(
     (m) => m.classification === 'HIGH_CONFIDENCE_MATCH'
   ).length;
-  const reviewRequiredCount = matches.filter(
+  const reviewRequiredCount = pipelineStats?.review_required_count ?? matches.filter(
     (m) => m.classification === 'REVIEW_REQUIRED'
   ).length;
 
@@ -301,7 +314,7 @@ export default function MatchingPage() {
         </div>
 
         <span className="text-slate-400 font-mono text-[11px]">
-          {matches.length} matches displayed
+          Showing top {matches.length} {pipelineStats ? `of ${pipelineStats.total_recommendations.toLocaleString()}` : ''} recommendations
         </span>
       </div>
 

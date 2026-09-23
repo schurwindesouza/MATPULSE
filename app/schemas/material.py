@@ -56,3 +56,31 @@ class HarmonizationStatsResponse(BaseModel):
     cpse_breakdown: Dict[str, int]
     status_breakdown: Dict[str, int]
     category_breakdown: Dict[str, int]
+
+
+class CommonMaterialProvenance(BaseModel):
+    match_id: Optional[int] = None
+    final_confidence: Optional[float] = None
+    classification: Optional[str] = None
+    reviewed_at: Optional[datetime] = None
+    reasons: List[str] = Field(default_factory=list)
+
+
+class CommonMaterialSummary(BaseModel):
+    common_material_code: str
+    description: str
+    category: Optional[str] = None
+    uom: Optional[str] = None
+    mappings_count: int
+    linked_cpses: List[str]
+    linked_materials: List[MaterialResponse]
+    provenance: Optional[CommonMaterialProvenance] = None
+    total_annual_quantity: float = 0.0
+    estimated_spend: float = 0.0
+
+
+class CommonMaterialCatalogResponse(BaseModel):
+    total_codes: int
+    total_mapped_materials: int
+    items: List[CommonMaterialSummary]
+

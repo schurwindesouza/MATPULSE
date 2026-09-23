@@ -53,7 +53,7 @@ export default function MatchAnalysisModal({ matchId, onClose }) {
 
   const handleOpenReviewQueue = () => {
     onClose();
-    navigate('/review-queue');
+    navigate(`/review-queue?match_id=${matchId}`);
   };
 
   if (!matchId) return null;

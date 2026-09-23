@@ -215,3 +215,114 @@ def get_harmonization_stats(db: Session) -> Dict:
         "status_breakdown": status_breakdown,
         "category_breakdown": category_breakdown,
     }
+
+
+def get_common_materials_catalog(
+    db: Session,
+    cpse: Optional[str] = None,
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+) -> Dict:
+    """
+    Retrieve aggregated Common National Material Codes with their mapped CPSE materials,
+    provenance details from approved AI matches, and consolidated procurement metrics.
+    """
+    from collections import defaultdict
+    from app.models.match import MaterialMatch
+
+    base_query = db.query(Material).filter(Material.common_material_code.isnot(None))
+
+    if cpse:
+        codes_with_cpse = (
+            db.query(Material.common_material_code)
+            .filter(
+                func.lower(Material.cpse) == cpse.strip().lower(),
+                Material.common_material_code.isnot(None),
+            )
+            .distinct()
+            .all()
+        )
+        valid_codes = [c[0] for c in codes_with_cpse]
+        if not valid_codes:
+            return {"total_codes": 0, "total_mapped_materials": 0, "items": []}
+        base_query = base_query.filter(Material.common_material_code.in_(valid_codes))
+
+    if category:
+        base_query = base_query.filter(func.lower(Material.category) == category.strip().lower())
+
+    materials = base_query.order_by(Material.common_material_code.asc(), Material.cpse.asc()).all()
+
+    search_term = search.strip().lower() if search else None
+
+    grouped = defaultdict(list)
+    for mat in materials:
+        grouped[mat.common_material_code].append(mat)
+
+    approved_matches = (
+        db.query(MaterialMatch)
+        .filter(MaterialMatch.status == "APPROVED", MaterialMatch.common_material_code.isnot(None))
+        .all()
+    )
+    match_by_code = {m.common_material_code: m for m in approved_matches}
+
+    items = []
+    total_mapped_materials = 0
+
+    for code, group in grouped.items():
+        if search_term:
+            matches_search = (
+                search_term in code.lower()
+                or any(search_term in (m.description or "").lower() for m in group)
+                or any(search_term in (m.material_code or "").lower() for m in group)
+                or any(search_term in (m.technical_specification or "").lower() for m in group)
+            )
+            if not matches_search:
+                continue
+
+        linked_cpses = sorted(list(set(m.cpse for m in group)))
+        total_qty = sum(m.annual_quantity or 0.0 for m in group)
+        est_spend = sum((m.annual_quantity or 0.0) * (m.approx_unit_price or 0.0) for m in group)
+
+        rep_desc = group[0].description
+        for m in group:
+            if m.description and len(m.description) > len(rep_desc):
+                rep_desc = m.description
+
+        prov = None
+        match_record = match_by_code.get(code)
+        if match_record:
+            prov = {
+                "match_id": match_record.id,
+                "final_confidence": match_record.final_confidence,
+                "classification": match_record.classification,
+                "reviewed_at": match_record.reviewed_at,
+                "reasons": match_record.reasons or [],
+            }
+
+        items.append({
+            "common_material_code": code,
+            "description": rep_desc,
+            "category": group[0].category,
+            "uom": group[0].uom,
+            "mappings_count": len(group),
+            "linked_cpses": linked_cpses,
+            "linked_materials": group,
+            "provenance": prov,
+            "total_annual_quantity": round(total_qty, 2),
+            "estimated_spend": round(est_spend, 2),
+        })
+        total_mapped_materials += len(group)
+
+    items.sort(
+        key=lambda x: (
+            -(x["provenance"]["final_confidence"] if x["provenance"] and x["provenance"]["final_confidence"] else 0),
+            x["common_material_code"],
+        )
+    )
+
+    return {
+        "total_codes": len(items),
+        "total_mapped_materials": total_mapped_materials,
+        "items": items,
+    }
+

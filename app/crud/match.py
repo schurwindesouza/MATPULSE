@@ -37,7 +37,15 @@ def get_review_queue(
     query = db.query(MaterialMatch)
 
     if status:
-        query = query.filter(func.lower(MaterialMatch.status) == status.strip().lower())
+        normalized_status = status.strip().lower()
+        if normalized_status in ("pending", "pending_review", "pending-review"):
+            query = query.filter(MaterialMatch.status == "PENDING")
+        elif normalized_status in ("approved", "matched"):
+            query = query.filter(MaterialMatch.status == "APPROVED")
+        elif normalized_status in ("rejected",):
+            query = query.filter(MaterialMatch.status == "REJECTED")
+        else:
+            query = query.filter(func.lower(MaterialMatch.status) == normalized_status)
 
     if min_confidence is not None:
         query = query.filter(MaterialMatch.final_confidence >= min_confidence)
@@ -135,3 +143,51 @@ def reject_match(
     db.commit()
     db.refresh(match)
     return match
+
+
+def get_match_stats(db: Session) -> dict:
+    """Calculate matching pipeline statistics across persisted recommendations."""
+    total_recommendations = db.query(func.count(MaterialMatch.id)).scalar() or 0
+    pending_count = (
+        db.query(func.count(MaterialMatch.id))
+        .filter(MaterialMatch.status == "PENDING")
+        .scalar()
+        or 0
+    )
+    approved_count = (
+        db.query(func.count(MaterialMatch.id))
+        .filter(MaterialMatch.status == "APPROVED")
+        .scalar()
+        or 0
+    )
+    rejected_count = (
+        db.query(func.count(MaterialMatch.id))
+        .filter(MaterialMatch.status == "REJECTED")
+        .scalar()
+        or 0
+    )
+    high_confidence_count = (
+        db.query(func.count(MaterialMatch.id))
+        .filter(MaterialMatch.classification == "HIGH_CONFIDENCE_MATCH")
+        .scalar()
+        or 0
+    )
+    review_required_count = (
+        db.query(func.count(MaterialMatch.id))
+        .filter(MaterialMatch.classification == "REVIEW_REQUIRED")
+        .scalar()
+        or 0
+    )
+    avg_confidence = (
+        db.query(func.avg(MaterialMatch.final_confidence)).scalar() or 0.0
+    )
+
+    return {
+        "total_recommendations": total_recommendations,
+        "pending_count": pending_count,
+        "approved_count": approved_count,
+        "rejected_count": rejected_count,
+        "high_confidence_count": high_confidence_count,
+        "review_required_count": review_required_count,
+        "avg_confidence": round(float(avg_confidence), 2),
+    }

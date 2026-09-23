@@ -15,6 +15,7 @@ from app.schemas.matching import (
     MatchDetailResponse,
     ApproveMatchRequest,
     RejectMatchRequest,
+    MatchingStatsResponse,
 )
 from app.services.matcher import compare_materials
 from app.services.candidate_matcher import generate_candidate_pairs, find_material_matches
@@ -206,6 +207,18 @@ def get_match_review_queue(
         skip=skip,
         limit=limit,
     )
+
+
+@router.get(
+    "/stats",
+    response_model=MatchingStatsResponse,
+    summary="Get persistent AI matching recommendations pipeline statistics",
+    description="Returns total match count, breakdown by review status and classification, and average confidence.",
+)
+def get_matching_pipeline_stats(
+    db: Session = Depends(get_db),
+):
+    return crud_match.get_match_stats(db=db)
 
 
 @router.get(

@@ -9,6 +9,7 @@ from app.schemas.material import (
     MaterialBulkCreate,
     MaterialResponse,
     HarmonizationStatsResponse,
+    CommonMaterialCatalogResponse,
 )
 
 router = APIRouter()
@@ -22,6 +23,26 @@ router = APIRouter()
 )
 def get_harmonization_stats(db: Session = Depends(get_db)):
     return crud_material.get_harmonization_stats(db)
+
+
+@router.get(
+    "/common-catalog",
+    response_model=CommonMaterialCatalogResponse,
+    summary="Get master catalog of Common National Material Codes",
+    description="Retrieve all harmonized Common National Material Codes with mapped CPSE materials and provenance.",
+)
+def read_common_materials_catalog(
+    cpse: Optional[str] = Query(None, description="Filter by participating CPSE"),
+    category: Optional[str] = Query(None, description="Filter by material category"),
+    search: Optional[str] = Query(None, description="Search across code, description, and specs"),
+    db: Session = Depends(get_db),
+):
+    return crud_material.get_common_materials_catalog(
+        db,
+        cpse=cpse,
+        category=category,
+        search=search,
+    )
 
 
 @router.get(

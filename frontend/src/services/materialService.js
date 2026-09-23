@@ -19,6 +19,18 @@ export const materialService = {
     return response.data;
   },
 
+  // Fetch Common National Material Codes master catalog
+  async getCommonCatalog(params = {}) {
+    const response = await api.get('/api/v1/materials/common-catalog', { params });
+    return response.data;
+  },
+
+  // Fetch materials mapped to a given Common National Material Code
+  async getMaterialsByCommonCode(commonCode) {
+    const response = await api.get(`/api/v1/materials/common/${commonCode}`);
+    return response.data;
+  },
+
   // Health check
   async checkHealth() {
     const response = await api.get('/health');

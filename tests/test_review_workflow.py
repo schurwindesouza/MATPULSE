@@ -117,6 +117,11 @@ def test_review_queue_and_filters(sample_review_materials):
     for item in pending_res.json():
         assert item["status"] == "PENDING"
 
+    # Filter by status alias PENDING_REVIEW
+    pending_review_res = client.get("/api/v1/matching/review-queue?status=PENDING_REVIEW")
+    assert pending_review_res.status_code == 200
+    assert len(pending_review_res.json()) == len(pending_res.json())
+
     # Filter by non-existent status
     approved_res = client.get("/api/v1/matching/review-queue?status=APPROVED")
     assert approved_res.status_code == 200
@@ -262,3 +267,28 @@ def test_match_not_found_endpoints():
     assert client.get("/api/v1/matching/99999").status_code == 404
     assert client.post("/api/v1/matching/99999/approve", json={"common_material_code": "NMC-01"}).status_code == 404
     assert client.post("/api/v1/matching/99999/reject", json={"reason": "Test"}).status_code == 404
+
+
+def test_matching_stats_endpoint(sample_review_materials):
+    """
+    Test 8:
+    GET /api/v1/matching/stats returns comprehensive pipeline counts and confidence metrics.
+    """
+    client.post(
+        "/api/v1/matching/generate",
+        json={"top_k": 5, "min_confidence": 70.0},
+    )
+
+    res = client.get("/api/v1/matching/stats")
+    assert res.status_code == 200
+    data = res.json()
+
+    assert "total_recommendations" in data
+    assert "pending_count" in data
+    assert "approved_count" in data
+    assert "rejected_count" in data
+    assert "high_confidence_count" in data
+    assert "review_required_count" in data
+    assert "avg_confidence" in data
+    assert data["total_recommendations"] >= 1
+    assert data["pending_count"] == data["total_recommendations"]

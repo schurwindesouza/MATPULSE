@@ -131,3 +131,15 @@ class ApproveMatchRequest(BaseModel):
 
 class RejectMatchRequest(BaseModel):
     reason: Optional[str] = Field(None, description="Optional rejection explanation")
+
+
+class MatchingStatsResponse(BaseModel):
+    total_recommendations: int
+    pending_count: int
+    approved_count: int
+    rejected_count: int
+    high_confidence_count: int
+    review_required_count: int
+    avg_confidence: float
+
+    model_config = ConfigDict(from_attributes=True)

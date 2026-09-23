@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import engine, Base
 import app.models  # ensure models are registered with Base.metadata
-from app.routers import material_router, matching_router
+from app.routers import material_router, matching_router, import_router
 
 
 @asynccontextmanager
@@ -43,6 +43,11 @@ app.include_router(
     matching_router,
     prefix=f"{settings.API_V1_STR}/matching",
     tags=["AI Matching"],
+)
+app.include_router(
+    import_router,
+    prefix=f"{settings.API_V1_STR}/import",
+    tags=["Dataset Import"],
 )
 
 

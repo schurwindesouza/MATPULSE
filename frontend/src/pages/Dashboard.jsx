@@ -389,20 +389,21 @@ export default function Dashboard() {
             ) : recentMatches.length > 0 ? (
               <div className="space-y-2.5">
                 {recentMatches.slice(0, 4).map((match) => (
-                  <div
+                  <Link
                     key={match.id}
-                    className="p-3 bg-slate-950/60 hover:bg-slate-950 border border-slate-800/80 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors"
+                    to={`/review-queue?match_id=${match.id}`}
+                    className="p-3 bg-slate-950/60 hover:bg-slate-950 border border-slate-800/80 hover:border-indigo-500/40 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors block group"
                   >
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700/60">
+                        <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700/60 group-hover:border-indigo-500/50">
                           {match.material_a.cpse}
                         </span>
                         <span className="text-xs text-slate-300 font-medium truncate max-w-[200px]" title={match.material_a.description}>
                           {match.material_a.material_code}
                         </span>
                         <span className="text-slate-500 text-xs">↔</span>
-                        <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700/60">
+                        <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700/60 group-hover:border-indigo-500/50">
                           {match.material_b.cpse}
                         </span>
                         <span className="text-xs text-slate-300 font-medium truncate max-w-[200px]" title={match.material_b.description}>
@@ -421,7 +422,7 @@ export default function Dashboard() {
                       </div>
                       <StatusBadge status={match.status} size="xs" />
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             ) : (

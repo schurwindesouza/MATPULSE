@@ -7,6 +7,12 @@ export const matchingService = {
     return response.data;
   },
 
+  // Fetch matching pipeline statistics
+  async getMatchingStats() {
+    const response = await api.get('/api/v1/matching/stats');
+    return response.data;
+  },
+
   // Fetch full match details by ID
   async getMatchDetails(matchId) {
     const response = await api.get(`/api/v1/matching/${matchId}`);
