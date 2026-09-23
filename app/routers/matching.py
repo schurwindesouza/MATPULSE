@@ -1,9 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.crud import material as crud_material
-from app.schemas.matching import MatchingCompareRequest, MatchingCompareResponse
+from app.schemas.matching import (
+    MatchingCompareRequest,
+    MatchingCompareResponse,
+    BatchMatchingRequest,
+    BatchMatchingResponse,
+)
 from app.services.matcher import compare_materials
+from app.services.candidate_matcher import find_material_matches
 
 router = APIRouter()
 
@@ -50,3 +57,43 @@ def compare_material_pair(
     )
 
     return result
+
+
+@router.post(
+    "/batch",
+    response_model=BatchMatchingResponse,
+    summary="Batch cross-CPSE candidate matching",
+    description=(
+        "Evaluates cross-CPSE candidate pairs across materials stored in the database. "
+        "Generates plausible candidate pairs, prevents self-matches and duplicate pair evaluations, "
+        "ranks matches by final confidence descending, and returns the top_k candidate matches."
+    ),
+)
+def batch_match_materials(
+    payload: Optional[BatchMatchingRequest] = None,
+    top_k: int = Query(5, ge=1, le=50, description="Max candidate matches to return per material"),
+    min_confidence: Optional[float] = Query(None, ge=0.0, le=100.0, description="Optional minimum confidence filter"),
+    cpse: Optional[str] = Query(None, description="Optional filter for source CPSE"),
+    db: Session = Depends(get_db),
+):
+    # Resolve parameters: payload takes precedence over query params if supplied
+    effective_top_k = payload.top_k if payload and payload.top_k is not None else top_k
+    effective_min_conf = (
+        payload.min_confidence
+        if payload and payload.min_confidence is not None
+        else (min_confidence if min_confidence is not None else 0.0)
+    )
+    effective_cpse = payload.cpse if payload and payload.cpse is not None else cpse
+
+    # Fetch materials from database
+    materials = crud_material.get_materials(db, skip=0, limit=500)
+
+    # Run batch candidate matching
+    batch_results = find_material_matches(
+        materials=materials,
+        top_k=effective_top_k,
+        min_confidence=effective_min_conf,
+        target_cpse=effective_cpse,
+    )
+
+    return batch_results
