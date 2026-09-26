@@ -43,3 +43,11 @@ htmlcov/
 # IDEs
 .vscode/
 .idea/
+
+# Node.js dependencies
+node_modules/
+frontend/node_modules/
+
+# Node.js dependencies
+node_modules/
+frontend/node_modules/

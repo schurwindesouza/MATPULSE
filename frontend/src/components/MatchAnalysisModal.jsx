@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import {
-  X,
-  Sparkles,
-  Cpu,
-  Building2,
-  CheckCircle2,
-  AlertTriangle,
-  HelpCircle,
-  ExternalLink,
-  Layers,
-  ArrowRight,
-  TrendingUp,
-} from 'lucide-react';
+  IconX,
+  IconCpu,
+  IconBuilding,
+  IconCheckCircle,
+  IconAlertTriangle,
+  IconHelpCircle,
+  IconExternalLink,
+  IconLayers,
+  IconArrowRight,
+  IconTrendingUp,
+} from './icons/Icons';
 import { useNavigate } from 'react-router-dom';
 import StatusBadge from './StatusBadge';
 import matchingService from '../services/matchingService';
@@ -59,28 +58,28 @@ export default function MatchAnalysisModal({ matchId, onClose }) {
   if (!matchId) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6">
       <div
-        className="relative w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
+        className="relative w-full max-w-5xl bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/95 sticky top-0 z-10">
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50 sticky top-0 z-10">
           <div className="flex items-center gap-3 flex-wrap">
-            <div className="p-2 rounded-lg bg-indigo-950 text-indigo-400 border border-indigo-800/40">
-              <Cpu className="w-5 h-5" />
+            <div className="p-2 rounded-lg bg-blue-50 text-blue-700 border border-blue-200">
+              <IconCpu className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-white tracking-tight">
+                <h2 className="text-base font-bold text-slate-900 tracking-tight">
                   AI Match Explainability Analysis
                 </h2>
-                <span className="font-mono text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
+                <span className="font-mono text-xs text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                   Match #{matchId}
                 </span>
                 {matchData && <StatusBadge status={matchData.status} size="xs" />}
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Cross-CPSE deterministic compatibility and transformer embedding cosine similarity.
               </p>
             </div>
@@ -89,351 +88,258 @@ export default function MatchAnalysisModal({ matchId, onClose }) {
           <div className="flex items-center gap-2">
             <button
               onClick={handleOpenReviewQueue}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-xs font-semibold text-white transition shadow-sm"
               title="Navigate to Review Queue"
             >
               <span>Open in Review Queue</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <IconArrowRight className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
             >
-              <X className="w-5 h-5" />
+              <IconX className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Scrollable Body */}
+        {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-6">
           {loading ? (
-            <div className="py-20 flex flex-col items-center justify-center space-y-3">
-              <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent animate-spin rounded-full" />
-              <p className="text-xs text-slate-400">Loading AI score breakdown & catalog specifications...</p>
+            <div className="py-16 text-center space-y-3">
+              <div className="w-8 h-8 border-2 border-blue-700 border-t-transparent animate-spin rounded-full mx-auto" />
+              <p className="text-xs text-slate-500">Loading AI explainability metrics...</p>
             </div>
           ) : error ? (
-            <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-800/60 text-rose-300 text-xs">
-              <p className="font-semibold text-rose-200">Failed to load match analysis</p>
-              <p className="mt-1">{error}</p>
+            <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+              <IconAlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <span>{error}</span>
             </div>
           ) : matchData ? (
             <>
-              {/* COMPOSITE AI SCORE BANNER */}
-              <div className="p-5 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="space-y-1 text-center md:text-left">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                    Combined Match Confidence
-                  </span>
-                  <div className="flex items-center gap-3 justify-center md:justify-start">
-                    <span className="text-3xl font-extrabold text-white font-mono tracking-tight">
+              {/* Composite Score Banner */}
+              <div className="p-5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Weighted Composite Confidence
+                    </span>
+                    <StatusBadge status={matchData.classification} size="xs" />
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-extrabold font-mono text-slate-900">
                       {matchData.final_confidence}%
                     </span>
-                    <StatusBadge status={matchData.classification} />
+                    <span className="text-xs text-slate-500">
+                      (High-confidence candidate for human validation)
+                    </span>
                   </div>
-                  <p className="text-xs text-slate-400">
-                    Classification determined by weighted multi-criteria decision algorithm.
-                  </p>
                 </div>
 
-                {/* Score Breakdown Metrics */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full md:w-auto">
-                  {/* Semantic */}
-                  <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 min-w-[120px]">
-                    <span className="text-[10px] text-slate-400 block font-medium">Semantic Similarity</span>
-                    <span className="text-base font-bold text-indigo-400 font-mono">
+                {/* Score Breakdown Pill Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center">
+                  <div className="p-2.5 rounded-lg bg-white border border-slate-200 shadow-sm">
+                    <p className="text-[10px] text-slate-500 uppercase font-semibold">Semantic (45%)</p>
+                    <p className="text-sm font-bold font-mono text-blue-700 mt-0.5">
                       {matchData.semantic_score}%
-                    </span>
-                    <div className="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
-                      <div
-                        className="bg-indigo-500 h-full rounded-full"
-                        style={{ width: `${Math.min(100, matchData.semantic_score)}%` }}
-                      />
-                    </div>
+                    </p>
                   </div>
-
-                  {/* Technical */}
-                  <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 min-w-[120px]">
-                    <span className="text-[10px] text-slate-400 block font-medium">Technical Rules</span>
-                    <span className="text-base font-bold text-emerald-400 font-mono">
+                  <div className="p-2.5 rounded-lg bg-white border border-slate-200 shadow-sm">
+                    <p className="text-[10px] text-slate-500 uppercase font-semibold">Technical (40%)</p>
+                    <p className="text-sm font-bold font-mono text-indigo-700 mt-0.5">
                       {matchData.technical_score}%
-                    </span>
-                    <div className="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
-                      <div
-                        className="bg-emerald-500 h-full rounded-full"
-                        style={{ width: `${Math.min(100, matchData.technical_score)}%` }}
-                      />
-                    </div>
+                    </p>
                   </div>
-
-                  {/* Category */}
-                  <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 min-w-[120px]">
-                    <span className="text-[10px] text-slate-400 block font-medium">Category Group</span>
-                    <span className="text-base font-bold text-cyan-400 font-mono">
+                  <div className="p-2.5 rounded-lg bg-white border border-slate-200 shadow-sm">
+                    <p className="text-[10px] text-slate-500 uppercase font-semibold">Category (10%)</p>
+                    <p className="text-sm font-bold font-mono text-teal-700 mt-0.5">
                       {matchData.category_score}%
-                    </span>
-                    <div className="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
-                      <div
-                        className="bg-cyan-500 h-full rounded-full"
-                        style={{ width: `${Math.min(100, matchData.category_score)}%` }}
-                      />
-                    </div>
+                    </p>
                   </div>
-
-                  {/* UOM */}
-                  <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 min-w-[120px]">
-                    <span className="text-[10px] text-slate-400 block font-medium">UOM Compatibility</span>
-                    <span className="text-base font-bold text-amber-400 font-mono">
+                  <div className="p-2.5 rounded-lg bg-white border border-slate-200 shadow-sm">
+                    <p className="text-[10px] text-slate-500 uppercase font-semibold">UOM (5%)</p>
+                    <p className="text-sm font-bold font-mono text-emerald-700 mt-0.5">
                       {matchData.uom_score}%
-                    </span>
-                    <div className="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
-                      <div
-                        className="bg-amber-500 h-full rounded-full"
-                        style={{ width: `${Math.min(100, matchData.uom_score)}%` }}
-                      />
-                    </div>
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* SIDE-BY-SIDE MATERIAL PROVENANCE CARDS */}
+              {/* Side-by-Side Material Records */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Material A (Source CPSE) */}
-                <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                {/* Material A */}
+                <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                     <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-indigo-400" />
-                      <span className="font-bold text-xs text-white">Source Material A</span>
-                    </div>
-                    <span className="font-mono text-xs px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 font-bold border border-indigo-800/60">
-                      {matchData.material_a.cpse}
-                    </span>
-                  </div>
-
-                  <div>
-                    <span className="text-[10px] uppercase font-semibold text-slate-400 block mb-0.5">
-                      Original CPSE Material Code (Immutable)
-                    </span>
-                    <div className="p-2 rounded bg-slate-900 border border-indigo-500/30 font-mono text-xs font-bold text-indigo-300">
-                      {matchData.material_a.material_code}
-                    </div>
-                  </div>
-
-                  <div>
-                    <span className="text-[10px] uppercase font-semibold text-slate-400 block mb-0.5">
-                      Original Description
-                    </span>
-                    <p className="text-xs text-slate-200 leading-relaxed bg-slate-900/60 p-2.5 rounded border border-slate-800 font-sans">
-                      {matchData.material_a.description}
-                    </p>
-                  </div>
-
-                  <div>
-                    <span className="text-[10px] uppercase font-semibold text-slate-400 block mb-0.5">
-                      Technical Specification
-                    </span>
-                    <p className="text-xs text-slate-300 font-mono bg-slate-900/60 p-2.5 rounded border border-slate-800 leading-relaxed">
-                      {matchData.material_a.technical_specification || 'No explicit spec string'}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-xs pt-1">
-                    <div className="p-2 rounded bg-slate-900/60 border border-slate-800">
-                      <span className="text-[10px] text-slate-500 block">Category</span>
-                      <span className="font-medium text-slate-300 truncate block mt-0.5">
-                        {matchData.material_a.category || '—'}
+                      <span className="px-2 py-0.5 rounded font-mono text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                        {matchData.material_a?.cpse}
+                      </span>
+                      <span className="text-xs font-mono font-bold text-slate-900">
+                        {matchData.material_a?.material_code}
                       </span>
                     </div>
-                    <div className="p-2 rounded bg-slate-900/60 border border-slate-800">
-                      <span className="text-[10px] text-slate-500 block">Unit of Measure</span>
-                      <span className="font-mono font-medium text-indigo-300 block mt-0.5">
-                        {matchData.material_a.uom || '—'}
-                      </span>
+                    <span className="text-[10px] text-slate-400 font-mono">Material A (Ref)</span>
+                  </div>
+
+                  <div className="space-y-2 text-xs">
+                    <div>
+                      <p className="text-[10px] font-medium text-slate-400 uppercase">Description</p>
+                      <p className="text-slate-800 font-medium mt-0.5">
+                        {matchData.material_a?.description}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[10px] font-medium text-slate-400 uppercase">Technical Specs</p>
+                      <p className="text-slate-600 font-mono text-[11px] mt-0.5">
+                        {matchData.material_a?.technical_specification || 'None'}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+                      <div>
+                        <span className="text-[10px] text-slate-400">Category: </span>
+                        <span className="font-semibold text-slate-700">{matchData.material_a?.category}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400">UOM: </span>
+                        <span className="font-semibold text-slate-700">{matchData.material_a?.uom}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Material B (Matched Candidate CPSE) */}
-                <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                {/* Material B */}
+                <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                     <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-indigo-400" />
-                      <span className="font-bold text-xs text-white">Matched Material B</span>
-                    </div>
-                    <span className="font-mono text-xs px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 font-bold border border-indigo-800/60">
-                      {matchData.material_b.cpse}
-                    </span>
-                  </div>
-
-                  <div>
-                    <span className="text-[10px] uppercase font-semibold text-slate-400 block mb-0.5">
-                      Original CPSE Material Code (Immutable)
-                    </span>
-                    <div className="p-2 rounded bg-slate-900 border border-indigo-500/30 font-mono text-xs font-bold text-indigo-300">
-                      {matchData.material_b.material_code}
-                    </div>
-                  </div>
-
-                  <div>
-                    <span className="text-[10px] uppercase font-semibold text-slate-400 block mb-0.5">
-                      Original Description
-                    </span>
-                    <p className="text-xs text-slate-200 leading-relaxed bg-slate-900/60 p-2.5 rounded border border-slate-800 font-sans">
-                      {matchData.material_b.description}
-                    </p>
-                  </div>
-
-                  <div>
-                    <span className="text-[10px] uppercase font-semibold text-slate-400 block mb-0.5">
-                      Technical Specification
-                    </span>
-                    <p className="text-xs text-slate-300 font-mono bg-slate-900/60 p-2.5 rounded border border-slate-800 leading-relaxed">
-                      {matchData.material_b.technical_specification || 'No explicit spec string'}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-xs pt-1">
-                    <div className="p-2 rounded bg-slate-900/60 border border-slate-800">
-                      <span className="text-[10px] text-slate-500 block">Category</span>
-                      <span className="font-medium text-slate-300 truncate block mt-0.5">
-                        {matchData.material_b.category || '—'}
+                      <span className="px-2 py-0.5 rounded font-mono text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                        {matchData.material_b?.cpse}
+                      </span>
+                      <span className="text-xs font-mono font-bold text-slate-900">
+                        {matchData.material_b?.material_code}
                       </span>
                     </div>
-                    <div className="p-2 rounded bg-slate-900/60 border border-slate-800">
-                      <span className="text-[10px] text-slate-500 block">Unit of Measure</span>
-                      <span className="font-mono font-medium text-indigo-300 block mt-0.5">
-                        {matchData.material_b.uom || '—'}
-                      </span>
+                    <span className="text-[10px] text-slate-400 font-mono">Material B (Candidate)</span>
+                  </div>
+
+                  <div className="space-y-2 text-xs">
+                    <div>
+                      <p className="text-[10px] font-medium text-slate-400 uppercase">Description</p>
+                      <p className="text-slate-800 font-medium mt-0.5">
+                        {matchData.material_b?.description}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[10px] font-medium text-slate-400 uppercase">Technical Specs</p>
+                      <p className="text-slate-600 font-mono text-[11px] mt-0.5">
+                        {matchData.material_b?.technical_specification || 'None'}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+                      <div>
+                        <span className="text-[10px] text-slate-400">Category: </span>
+                        <span className="font-semibold text-slate-700">{matchData.material_b?.category}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400">UOM: </span>
+                        <span className="font-semibold text-slate-700">{matchData.material_b?.uom}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* TECHNICAL ATTRIBUTE COMPARISON MATRIX */}
-              <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                  <div className="flex items-center gap-2">
-                    <Layers className="w-4 h-4 text-emerald-400" />
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-300">
-                      Deterministic Attribute Verification Matrix
-                    </h3>
+              {/* Explainability Reasons & Warnings */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Supporting Reasons */}
+                <div className="p-4 rounded-xl bg-emerald-50/50 border border-emerald-200 space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-emerald-900 uppercase tracking-wide">
+                    <IconCheckCircle className="w-4 h-4 text-emerald-700" />
+                    <span>Supporting Equivalence Factors</span>
                   </div>
-                  <span className="text-[10px] font-mono text-slate-400">
-                    Extracted via Domain Regular Expression Rules
-                  </span>
+                  <ul className="text-xs text-emerald-950 space-y-1.5 list-disc list-inside">
+                    {matchData.reasons && matchData.reasons.length > 0 ? (
+                      matchData.reasons.map((r, i) => <li key={i}>{r}</li>)
+                    ) : (
+                      <li className="text-slate-500 italic">No specific reasons generated.</li>
+                    )}
+                  </ul>
                 </div>
 
-                {matchData.attribute_comparison && Object.keys(matchData.attribute_comparison).length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {/* Warnings / Discrepancies */}
+                <div className="p-4 rounded-xl bg-amber-50/50 border border-amber-200 space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-amber-900 uppercase tracking-wide">
+                    <IconAlertTriangle className="w-4 h-4 text-amber-700" />
+                    <span>Risk Factors &amp; Warnings</span>
+                  </div>
+                  <ul className="text-xs text-amber-950 space-y-1.5 list-disc list-inside">
+                    {matchData.warnings && matchData.warnings.length > 0 ? (
+                      matchData.warnings.map((w, i) => <li key={i}>{w}</li>)
+                    ) : (
+                      <li className="text-emerald-700 italic list-none flex items-center gap-1">
+                        <IconCheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>No critical attribute discrepancies flagged.</span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Attribute Comparison Matrix */}
+              {matchData.attribute_comparison && Object.keys(matchData.attribute_comparison).length > 0 && (
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200 text-xs">
+                    <span className="font-bold uppercase tracking-wider text-slate-700">
+                      Deterministic Attribute Compatibility Matrix
+                    </span>
+                    <span className="text-[11px] text-slate-500 font-mono">
+                      {Object.keys(matchData.attribute_comparison).length} Parsed Parameters
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
                     {Object.entries(matchData.attribute_comparison).map(([attr, status]) => {
                       const isMatch = status === 'MATCH';
                       const isMismatch = status === 'MISMATCH';
-
                       return (
                         <div
                           key={attr}
-                          className={`p-2.5 rounded-lg border flex items-center justify-between text-xs ${
-                            isMatch
-                              ? 'bg-emerald-950/20 border-emerald-800/40 text-emerald-300'
-                              : isMismatch
-                              ? 'bg-rose-950/20 border-rose-800/40 text-rose-300'
-                              : 'bg-slate-900/60 border-slate-800 text-slate-400'
-                          }`}
+                          className="p-2.5 rounded-lg bg-white border border-slate-200 flex items-center justify-between shadow-sm"
                         >
-                          <span className="font-mono text-[11px] capitalize truncate mr-2">
-                            {attr.replace(/_/g, ' ')}
-                          </span>
+                          <span className="text-xs font-medium text-slate-700 capitalize">{attr}</span>
                           <span
-                            className={`inline-flex items-center gap-1 font-mono text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono border ${
                               isMatch
-                                ? 'bg-emerald-900/40 text-emerald-400'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                 : isMismatch
-                                ? 'bg-rose-900/40 text-rose-400'
-                                : 'bg-slate-800 text-slate-500'
+                                ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                : 'bg-slate-100 text-slate-600 border-slate-200'
                             }`}
                           >
-                            {isMatch && <CheckCircle2 className="w-3 h-3" />}
-                            {isMismatch && <AlertTriangle className="w-3 h-3" />}
-                            {!isMatch && !isMismatch && <HelpCircle className="w-3 h-3" />}
-                            <span>{status}</span>
+                            {status}
                           </span>
                         </div>
                       );
                     })}
                   </div>
-                ) : (
-                  <p className="text-xs text-slate-500 italic">No attribute comparison map available.</p>
-                )}
-              </div>
-
-              {/* REASONS AND WARNINGS */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Positive Match Reasons */}
-                <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2.5">
-                  <div className="flex items-center gap-2 pb-1 border-b border-slate-800/60">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-emerald-300">
-                      Match Affirmations ({matchData.reasons?.length || 0})
-                    </h3>
-                  </div>
-                  {matchData.reasons && matchData.reasons.length > 0 ? (
-                    <ul className="space-y-1.5 text-xs text-slate-300">
-                      {matchData.reasons.map((reason, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <span className="text-emerald-400 font-bold mt-0.5">✓</span>
-                          <span>{reason}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-xs text-slate-500 italic">No specific affirmative reasons recorded.</p>
-                  )}
                 </div>
-
-                {/* Warnings / Discrepancy Notices */}
-                <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2.5">
-                  <div className="flex items-center gap-2 pb-1 border-b border-slate-800/60">
-                    <AlertTriangle className="w-4 h-4 text-amber-400" />
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-amber-300">
-                      Discrepancies & Warnings ({matchData.warnings?.length || 0})
-                    </h3>
-                  </div>
-                  {matchData.warnings && matchData.warnings.length > 0 ? (
-                    <ul className="space-y-1.5 text-xs text-amber-200">
-                      {matchData.warnings.map((warning, idx) => (
-                        <li key={idx} className="flex items-start gap-2 bg-amber-950/20 p-1.5 rounded border border-amber-900/30">
-                          <span className="text-amber-400 font-bold mt-0.5">!</span>
-                          <span>{warning}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-xs text-slate-500 italic">No technical discrepancies or warnings flagged.</p>
-                  )}
-                </div>
-              </div>
+              )}
             </>
           ) : null}
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-3 border-t border-slate-800 bg-slate-900/95 flex items-center justify-between text-xs text-slate-400">
-          <span className="font-mono text-[11px]">
-            Model: all-MiniLM-L6-v2 • Cosine Similarity Metric
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleOpenReviewQueue}
-              className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition"
-            >
-              Open in Review Queue
-            </button>
-            <button
-              onClick={onClose}
-              className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium transition"
-            >
-              Close
-            </button>
-          </div>
+        <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
+          <span className="font-mono">SIH 26099 AI Explainability Model</span>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 font-medium border border-slate-200 transition shadow-sm"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>

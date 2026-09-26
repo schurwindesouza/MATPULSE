@@ -1,32 +1,36 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import {
-  CheckSquare,
-  Sparkles,
-  Cpu,
-  Building2,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  ArrowRight,
-  RotateCcw,
-  Search,
-  Filter,
-  Eye,
-  Check,
-  X,
-  ExternalLink,
-  Layers,
-  HelpCircle,
-  FileCheck,
-  ShieldAlert,
-  ArrowUpDown,
-  Tag,
-  Clock,
-} from 'lucide-react';
+  IconCheckSquare,
+  IconSparkles,
+  IconCpu,
+  IconBuilding,
+  IconCheckCircle,
+  IconXCircle,
+  IconAlertTriangle,
+  IconArrowRight,
+  IconRotateCcw,
+  IconSearch,
+  IconFilter,
+  IconEye,
+  IconCheck,
+  IconX,
+  IconExternalLink,
+  IconLayers,
+  IconHelpCircle,
+  IconFileCheck,
+  IconShieldAlert,
+  IconArrowUpDown,
+  IconTag,
+  IconClock,
+  IconDownload,
+  IconInfo,
+} from '../components/icons/Icons';
 import StatusBadge from '../components/StatusBadge';
 import MatchAnalysisModal from '../components/MatchAnalysisModal';
 import matchingService from '../services/matchingService';
+import materialService from '../services/materialService';
+import { exportToCsv, getDateStamp } from '../utils/csvExport';
 
 const CPSE_OPTIONS = ['All CPSEs', 'BHEL', 'NTPC', 'ONGC', 'SAIL', 'IOCL', 'Coal India'];
 
@@ -90,6 +94,7 @@ export default function ReviewQueuePage() {
   const [submittingAction, setSubmittingAction] = useState(false);
   const [actionNotice, setActionNotice] = useState(null);
   const [pipelineStats, setPipelineStats] = useState(null);
+  const [materialStats, setMaterialStats] = useState(null);
 
   // Fetch queue data
   const fetchQueue = useCallback(async () => {
@@ -122,10 +127,14 @@ export default function ReviewQueuePage() {
 
   const fetchStats = useCallback(async () => {
     try {
-      const data = await matchingService.getMatchingStats();
-      setPipelineStats(data);
+      const [pStats, mStats] = await Promise.all([
+        matchingService.getMatchingStats(),
+        materialService.getStats(),
+      ]);
+      setPipelineStats(pStats);
+      setMaterialStats(mStats);
     } catch (err) {
-      console.error('Failed to load matching stats', err);
+      console.error('Failed to load matching and material stats', err);
     }
   }, []);
 
@@ -133,6 +142,55 @@ export default function ReviewQueuePage() {
     fetchQueue();
     fetchStats();
   }, [fetchQueue, fetchStats]);
+
+  // CSV Export handler
+  const handleExportCsv = () => {
+    const rowsToExport = filteredMatches.length > 0 ? filteredMatches : matches;
+    if (rowsToExport.length === 0) return;
+
+    const filename = `MATPULSE_Match_Recommendations_${getDateStamp()}.csv`;
+    const headers = [
+      { key: 'id', label: 'Recommendation ID' },
+      { key: 'status', label: 'Status' },
+      { key: 'classification', label: 'Classification' },
+      { key: 'overall_confidence', label: 'Overall Confidence (%)' },
+      { key: 'semantic_score', label: 'Semantic Similarity (%)' },
+      { key: 'technical_score', label: 'Technical Score (%)' },
+      { key: 'common_material_code', label: 'Common Material Code' },
+      { key: 'source_cpse', label: 'Source CPSE' },
+      { key: 'source_code', label: 'Source Material Code' },
+      { key: 'source_description', label: 'Source Description' },
+      { key: 'source_category', label: 'Source Category' },
+      { key: 'target_cpse', label: 'Target CPSE' },
+      { key: 'target_code', label: 'Target Material Code' },
+      { key: 'target_description', label: 'Target Description' },
+      { key: 'target_category', label: 'Target Category' },
+      { key: 'reasons', label: 'Review Reasons' },
+      { key: 'created_at', label: 'Created At' },
+    ];
+
+    const flattenedRows = rowsToExport.map((m) => ({
+      id: m.id,
+      status: m.status,
+      classification: m.classification,
+      overall_confidence: m.confidence_score ?? m.overall_confidence ?? '',
+      semantic_score: m.semantic_score != null ? Math.round(m.semantic_score * 100) : '',
+      technical_score: m.technical_score != null ? Math.round(m.technical_score * 100) : '',
+      common_material_code: m.common_material_code || '',
+      source_cpse: m.material_a?.cpse || '',
+      source_code: m.material_a?.material_code || '',
+      source_description: m.material_a?.description || '',
+      source_category: m.material_a?.category || '',
+      target_cpse: m.material_b?.cpse || '',
+      target_code: m.material_b?.material_code || '',
+      target_description: m.material_b?.description || '',
+      target_category: m.material_b?.category || '',
+      reasons: Array.isArray(m.reasons) ? m.reasons.join('; ') : m.reasons || '',
+      created_at: m.created_at || '',
+    }));
+
+    exportToCsv({ filename, headers, rows: flattenedRows });
+  };
 
   // If a specific match_id is provided in URL, scroll to it when loaded
   useEffect(() => {
@@ -168,7 +226,9 @@ export default function ReviewQueuePage() {
     });
   }, [matches, searchTerm]);
 
-  // Queue Statistics (database-backed from pipelineStats with list fallback)
+  // Queue & Master Catalog Statistics
+  const totalMaterialsAnalyzed = materialStats?.total_materials ?? '—';
+  const totalRecommendations = pipelineStats?.total_recommendations ?? matches.length;
   const pendingCount = pipelineStats ? pipelineStats.pending_count : matches.filter((m) => m.status === 'PENDING').length;
   const highConfPending = pipelineStats ? pipelineStats.high_confidence_count : matches.filter(
     (m) => m.classification === 'HIGH_CONFIDENCE_MATCH'
@@ -263,18 +323,18 @@ export default function ReviewQueuePage() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-indigo-950/80 text-indigo-400 border border-indigo-800/50 shadow-sm">
-              <CheckSquare className="w-5 h-5" />
+            <div className="p-2 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 shadow-sm">
+              <IconCheckSquare className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">Human Review & Harmonization Queue</h1>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Inspect AI-recommended cross-CPSE candidate equivalences, verify technical parameters, assign Common National Material Codes, or reject false candidates.
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Human Review & Harmonization Queue</h1>
+              <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+                Inspect AI-recommended cross-CPSE equivalences, verify technical attributes, and assign Common National Material Codes.
               </p>
             </div>
           </div>
@@ -282,19 +342,28 @@ export default function ReviewQueuePage() {
 
         {/* Top Action Links */}
         <div className="flex items-center gap-3">
+          <button
+            onClick={handleExportCsv}
+            disabled={loading || (filteredMatches.length === 0 && matches.length === 0)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold shadow-sm transition disabled:opacity-50"
+            title="Export match recommendations to CSV"
+          >
+            <IconDownload className="w-3.5 h-3.5" />
+            <span>Export CSV</span>
+          </button>
           <Link
             to="/matching"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold border border-slate-300 shadow-sm transition"
           >
-            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+            <IconSparkles className="w-3.5 h-3.5 text-blue-600" />
             <span>AI Matching Engine</span>
           </Link>
           <button
             onClick={fetchQueue}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-300 shadow-sm transition disabled:opacity-50"
           >
-            <RotateCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <IconRotateCcw className={`w-3.5 h-3.5 text-slate-500 ${loading ? 'animate-spin' : ''}`} />
             <span>Refresh Queue</span>
           </button>
         </div>
@@ -303,91 +372,107 @@ export default function ReviewQueuePage() {
       {/* Action Banner / Notification */}
       {actionNotice && (
         <div
-          className={`p-4 rounded-xl border text-xs flex items-center justify-between gap-3 shadow-lg ${
+          className={`p-4 rounded-xl border text-xs flex items-center justify-between gap-3 shadow-sm ${
             actionNotice.type === 'success'
-              ? 'bg-emerald-950/60 border-emerald-800 text-emerald-200'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
               : actionNotice.type === 'info'
-              ? 'bg-slate-900 border-slate-700 text-slate-300'
-              : 'bg-rose-950/60 border-rose-800 text-rose-200'
+              ? 'bg-slate-50 border-slate-200 text-slate-700'
+              : 'bg-rose-50 border-rose-200 text-rose-800'
           }`}
         >
           <div className="flex items-center gap-2.5">
             {actionNotice.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              <IconCheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
             ) : actionNotice.type === 'info' ? (
-              <XCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+              <IconXCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
             ) : (
-              <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+              <IconAlertTriangle className="w-4 h-4 text-rose-600 flex-shrink-0" />
             )}
             <span>{actionNotice.message}</span>
           </div>
           <button
             onClick={() => setActionNotice(null)}
-            className="p-1 rounded hover:bg-slate-800/60 text-slate-400 hover:text-white"
+            className="p-1 rounded hover:bg-slate-200 text-slate-500 hover:text-slate-900"
           >
-            <X className="w-4 h-4" />
+            <IconX className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* Deep Link Focused Notice */}
       {targetMatchId && (
-        <div className="p-3 rounded-lg bg-indigo-950/40 border border-indigo-800/60 flex items-center justify-between text-xs text-indigo-300">
+        <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-between text-xs text-blue-900">
           <div className="flex items-center gap-2">
-            <Cpu className="w-4 h-4 text-indigo-400" />
+            <IconCpu className="w-4 h-4 text-blue-700" />
             <span>
               Targeting recommendation <strong>#MATCH-{targetMatchId}</strong> passed from the AI Matching analysis view.
             </span>
           </div>
           <button
             onClick={() => setSearchParams({})}
-            className="text-xs text-indigo-400 hover:text-indigo-200 font-mono underline"
+            className="text-xs text-blue-700 hover:text-blue-900 font-mono underline"
           >
             Clear Target Filter
           </button>
         </div>
       )}
 
-      {/* Overview Stat Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-        <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
-          <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-medium">Pending Review</span>
+      {/* Explanatory Banner: Material vs Recommendation Entity Separation */}
+      <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200 text-blue-900 flex items-start gap-2.5 text-xs shadow-sm">
+        <IconInfo className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+        <p className="leading-relaxed">
+          Match recommendations represent candidate relationships between material records. A single material may participate in multiple candidate matches.
+        </p>
+      </div>
+
+      {/* Overview Stat Cards (5 Distinct Cards) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
+        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-medium">Materials Analyzed</span>
           <div className="flex items-baseline gap-2 mt-1">
-            <span className="font-mono text-xl font-bold text-indigo-400">{pendingCount}</span>
-            <span className="text-[11px] text-slate-500">items in queue</span>
+            <span className="font-mono text-xl font-bold text-slate-900">{totalMaterialsAnalyzed}</span>
           </div>
+          <span className="text-[10px] text-slate-400 mt-1 block">records in catalog</span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
-          <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-medium">High Confidence</span>
+        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-medium">Match Recommendations</span>
           <div className="flex items-baseline gap-2 mt-1">
-            <span className="font-mono text-xl font-bold text-emerald-400">{highConfPending}</span>
-            <span className="text-[11px] text-slate-500">≥ 85% score</span>
+            <span className="font-mono text-xl font-bold text-blue-700">{totalRecommendations}</span>
           </div>
+          <span className="text-[10px] text-slate-400 mt-1 block">candidate pairs</span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
-          <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-medium">Review Required</span>
+        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-medium">High Confidence</span>
           <div className="flex items-baseline gap-2 mt-1">
-            <span className="font-mono text-xl font-bold text-amber-400">{reviewRequiredPending}</span>
-            <span className="text-[11px] text-slate-500">&lt; 85% or warnings</span>
+            <span className="font-mono text-xl font-bold text-emerald-700">{highConfPending}</span>
           </div>
+          <span className="text-[10px] text-slate-400 mt-1 block">≥ 85% match score</span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
-          <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-medium">Approved & Standardized</span>
+        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-medium">Review Required</span>
           <div className="flex items-baseline gap-2 mt-1">
-            <span className="font-mono text-xl font-bold text-teal-400">{approvedCount}</span>
-            <span className="text-[11px] text-slate-500">common codes assigned</span>
+            <span className="font-mono text-xl font-bold text-amber-700">{reviewRequiredPending}</span>
           </div>
+          <span className="text-[10px] text-slate-400 mt-1 block">&lt; 85% match score</span>
+        </div>
+
+        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-medium">Approved & Standardized</span>
+          <div className="flex items-baseline gap-2 mt-1">
+            <span className="font-mono text-xl font-bold text-teal-700">{approvedCount}</span>
+          </div>
+          <span className="text-[10px] text-slate-400 mt-1 block">common codes assigned</span>
         </div>
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-sm">
+      <div className="p-4 rounded-xl bg-white border border-slate-200 space-y-3 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs">
           {/* Status Tabs */}
-          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 w-fit">
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200 w-fit">
             {[
               { id: 'PENDING', label: 'Pending Review' },
               { id: 'APPROVED', label: 'Approved' },
@@ -399,8 +484,8 @@ export default function ReviewQueuePage() {
                 onClick={() => setStatusFilter(tab.id)}
                 className={`px-3 py-1.5 rounded-md font-medium text-xs transition ${
                   statusFilter === tab.id
-                    ? 'bg-indigo-600 text-white font-semibold shadow-sm shadow-indigo-600/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                    ? 'bg-blue-700 text-white font-semibold shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                 }`}
               >
                 {tab.label}
@@ -414,7 +499,7 @@ export default function ReviewQueuePage() {
             <select
               value={classificationFilter}
               onChange={(e) => setClassificationFilter(e.target.value)}
-              className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:border-blue-600"
             >
               <option value="">All Classifications</option>
               <option value="HIGH_CONFIDENCE_MATCH">High Confidence Only</option>
@@ -425,7 +510,7 @@ export default function ReviewQueuePage() {
             <select
               value={cpseFilter}
               onChange={(e) => setCpseFilter(e.target.value)}
-              className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:border-blue-600"
             >
               {CPSE_OPTIONS.map((c) => (
                 <option key={c} value={c}>
@@ -438,7 +523,7 @@ export default function ReviewQueuePage() {
             <select
               value={minConfidence}
               onChange={(e) => setMinConfidence(e.target.value)}
-              className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:border-blue-600"
             >
               <option value="">Any Confidence</option>
               <option value="70">≥ 70% Confidence</option>
@@ -451,18 +536,18 @@ export default function ReviewQueuePage() {
 
         {/* Search Input */}
         <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+          <IconSearch className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by Material Code (e.g. BHL-020-01), description keywords (pipe, valve, flange), or Common Material Code..."
-            className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition"
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-blue-600 transition"
           />
           {searchTerm && (
             <button
               onClick={() => setSearchTerm('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs font-mono"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 text-xs font-mono"
             >
               Clear
             </button>
@@ -472,11 +557,11 @@ export default function ReviewQueuePage() {
 
       {/* Main Review Queue Items List */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between text-xs text-slate-400 px-1">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs text-slate-500 px-1">
           <span>
-            Showing top {filteredMatches.length} {pipelineStats ? `of ${statusFilter === 'PENDING' ? pipelineStats.pending_count.toLocaleString() : pipelineStats.total_recommendations.toLocaleString()}` : ''} recommendations ({statusFilter === 'ALL' ? 'All Statuses' : statusFilter === 'PENDING' ? 'Pending Review' : statusFilter})
+            Showing {filteredMatches.length} of {pipelineStats ? (statusFilter === 'PENDING' ? pipelineStats.pending_count.toLocaleString() : pipelineStats.total_recommendations.toLocaleString()) : matches.length} match recommendations generated from {totalMaterialsAnalyzed} material records.
           </span>
-          <span className="font-mono text-[11px] text-slate-500">
+          <span className="font-mono text-[11px] text-slate-400">
             Ranked by AI confidence descending
           </span>
         </div>
@@ -484,17 +569,17 @@ export default function ReviewQueuePage() {
         {loading ? (
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="p-6 bg-slate-900/60 rounded-xl border border-slate-800 animate-pulse h-40" />
+              <div key={i} className="p-6 bg-white rounded-xl border border-slate-200 animate-pulse h-40 shadow-sm" />
             ))}
           </div>
         ) : error ? (
-          <div className="p-6 bg-rose-950/30 border border-rose-800/60 rounded-xl text-center space-y-2">
-            <AlertTriangle className="w-8 h-8 text-rose-400 mx-auto" />
-            <h3 className="text-sm font-semibold text-rose-300">Error Loading Review Queue</h3>
-            <p className="text-xs text-rose-400">{error}</p>
+          <div className="p-6 bg-rose-50 border border-rose-200 rounded-xl text-center space-y-2">
+            <IconAlertTriangle className="w-8 h-8 text-rose-600 mx-auto" />
+            <h3 className="text-sm font-semibold text-rose-900">Error Loading Review Queue</h3>
+            <p className="text-xs text-rose-700">{error}</p>
             <button
               onClick={fetchQueue}
-              className="mt-2 px-3 py-1.5 rounded-lg bg-rose-800 hover:bg-rose-700 text-white text-xs font-semibold"
+              className="mt-2 px-3.5 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-800 text-white text-xs font-semibold shadow-sm"
             >
               Retry
             </button>
@@ -510,22 +595,22 @@ export default function ReviewQueuePage() {
               <div
                 key={item.id}
                 id={`match-card-${item.id}`}
-                className={`p-5 rounded-xl border transition-all duration-200 bg-slate-900/80 hover:bg-slate-900 shadow-sm ${
+                className={`p-5 rounded-xl border transition-all duration-200 bg-white hover:bg-slate-50/60 shadow-sm ${
                   isTargeted
-                    ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-950/20'
-                    : 'border-slate-800 hover:border-slate-700'
+                    ? 'border-blue-500 ring-2 ring-blue-100 bg-blue-50/30'
+                    : 'border-slate-200 hover:border-slate-300'
                 }`}
               >
                 {/* Recommendation Card Header */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
                   <div className="flex items-center gap-2.5 flex-wrap">
-                    <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-950 text-indigo-400 border border-indigo-900/50">
+                    <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
                       #MATCH-{item.id}
                     </span>
                     <StatusBadge status={item.status} size="sm" />
                     <StatusBadge status={item.classification} size="sm" />
                     {isTargeted && (
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                         Selected Recommendation
                       </span>
                     )}
@@ -533,14 +618,14 @@ export default function ReviewQueuePage() {
 
                   <div className="flex items-center gap-3">
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-[10px] text-slate-400 uppercase tracking-wider">AI Score:</span>
-                      <span className="font-mono font-bold text-sm text-emerald-400">
+                      <span className="text-[10px] text-slate-500 uppercase tracking-wider font-medium">AI Score:</span>
+                      <span className="font-mono font-bold text-sm text-emerald-700">
                         {item.final_confidence}%
                       </span>
                     </div>
-                    <span className="text-slate-600 text-xs">•</span>
-                    <span className="text-[11px] text-slate-400 flex items-center gap-1 font-mono">
-                      <Clock className="w-3 h-3 text-slate-500" />
+                    <span className="text-slate-300 text-xs">•</span>
+                    <span className="text-[11px] text-slate-500 flex items-center gap-1 font-mono">
+                      <IconClock className="w-3 h-3 text-slate-400" />
                       {new Date(item.created_at).toLocaleDateString([], {
                         month: 'short',
                         day: 'numeric',
@@ -552,47 +637,47 @@ export default function ReviewQueuePage() {
                 {/* 2-Column Comparison Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 my-4">
                   {/* Material A (Source CPSE) */}
-                  <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 flex flex-col justify-between space-y-3">
+                  <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200 flex flex-col justify-between space-y-3">
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-2">
-                        <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800/60">
+                        <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-white text-slate-800 border border-slate-200">
                           {item.material_a.cpse}
                         </span>
-                        <span className="font-mono text-xs font-semibold text-white tracking-wide">
+                        <span className="font-mono text-xs font-semibold text-slate-900 tracking-wide">
                           {item.material_a.material_code}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-200 font-sans leading-relaxed font-medium">
+                      <p className="text-xs text-slate-800 font-sans leading-relaxed font-medium">
                         {item.material_a.description}
                       </p>
                     </div>
 
-                    <div className="pt-2 border-t border-slate-900 flex items-center justify-between text-[11px] text-slate-400">
-                      <span>Category: <strong className="text-slate-300">{item.material_a.category || 'N/A'}</strong></span>
-                      <span>UOM: <strong className="font-mono text-slate-300">{item.material_a.uom || 'N/A'}</strong></span>
+                    <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
+                      <span>Category: <strong className="text-slate-800">{item.material_a.category || 'N/A'}</strong></span>
+                      <span>UOM: <strong className="font-mono text-slate-800">{item.material_a.uom || 'N/A'}</strong></span>
                       <StatusBadge status={item.material_a.matching_status} size="xs" />
                     </div>
                   </div>
 
                   {/* Material B (Target CPSE) */}
-                  <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 flex flex-col justify-between space-y-3">
+                  <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200 flex flex-col justify-between space-y-3">
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-2">
-                        <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800/60">
+                        <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-white text-slate-800 border border-slate-200">
                           {item.material_b.cpse}
                         </span>
-                        <span className="font-mono text-xs font-semibold text-white tracking-wide">
+                        <span className="font-mono text-xs font-semibold text-slate-900 tracking-wide">
                           {item.material_b.material_code}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-200 font-sans leading-relaxed font-medium">
+                      <p className="text-xs text-slate-800 font-sans leading-relaxed font-medium">
                         {item.material_b.description}
                       </p>
                     </div>
 
-                    <div className="pt-2 border-t border-slate-900 flex items-center justify-between text-[11px] text-slate-400">
-                      <span>Category: <strong className="text-slate-300">{item.material_b.category || 'N/A'}</strong></span>
-                      <span>UOM: <strong className="font-mono text-slate-300">{item.material_b.uom || 'N/A'}</strong></span>
+                    <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
+                      <span>Category: <strong className="text-slate-800">{item.material_b.category || 'N/A'}</strong></span>
+                      <span>UOM: <strong className="font-mono text-slate-800">{item.material_b.uom || 'N/A'}</strong></span>
                       <StatusBadge status={item.material_b.matching_status} size="xs" />
                     </div>
                   </div>
@@ -600,31 +685,31 @@ export default function ReviewQueuePage() {
 
                 {/* Harmonization Outcome or AI Reasons */}
                 {isApproved && item.common_material_code && (
-                  <div className="p-3 mb-3 rounded-lg bg-teal-950/30 border border-teal-800/50 flex items-center justify-between flex-wrap gap-2 text-xs">
+                  <div className="p-3 mb-3 rounded-lg bg-teal-50 border border-teal-200 flex items-center justify-between flex-wrap gap-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <Tag className="w-4 h-4 text-teal-400" />
-                      <span className="text-teal-200">
+                      <IconTag className="w-4 h-4 text-teal-700" />
+                      <span className="text-teal-900 font-medium">
                         Harmonized under Common National Material Code:
                       </span>
-                      <span className="font-mono font-bold text-teal-300 px-2 py-0.5 rounded bg-teal-900/60 border border-teal-700/60">
+                      <span className="font-mono font-bold text-teal-800 px-2 py-0.5 rounded bg-white border border-teal-300">
                         {item.common_material_code}
                       </span>
                     </div>
-                    <span className="text-[11px] text-teal-400">
+                    <span className="text-[11px] text-teal-700">
                       Reviewed: {item.reviewed_at ? new Date(item.reviewed_at).toLocaleString() : 'Approved'}
                     </span>
                   </div>
                 )}
 
                 {isRejected && (
-                  <div className="p-3 mb-3 rounded-lg bg-rose-950/30 border border-rose-800/50 flex items-center justify-between flex-wrap gap-2 text-xs">
+                  <div className="p-3 mb-3 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-between flex-wrap gap-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <XCircle className="w-4 h-4 text-rose-400" />
-                      <span className="text-rose-200">
+                      <IconXCircle className="w-4 h-4 text-rose-600" />
+                      <span className="text-rose-900 font-medium">
                         Recommendation Rejected. Original CPSE records kept independent.
                       </span>
                     </div>
-                    <span className="text-[11px] text-rose-400">
+                    <span className="text-[11px] text-rose-700">
                       Reviewed: {item.reviewed_at ? new Date(item.reviewed_at).toLocaleString() : 'Rejected'}
                     </span>
                   </div>
@@ -635,9 +720,9 @@ export default function ReviewQueuePage() {
                   {item.reasons && item.reasons.slice(0, 2).map((r, idx) => (
                     <span
                       key={idx}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950/40 text-emerald-300 border border-emerald-800/40 text-[11px]"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px]"
                     >
-                      <span className="text-emerald-400 font-bold">✓</span>
+                      <span className="text-emerald-700 font-bold">✓</span>
                       <span>{r}</span>
                     </span>
                   ))}
@@ -645,21 +730,21 @@ export default function ReviewQueuePage() {
                   {item.warnings && item.warnings.map((w, idx) => (
                     <span
                       key={idx}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-950/40 text-amber-300 border border-amber-800/40 text-[11px]"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-[11px]"
                     >
-                      <AlertTriangle className="w-3 h-3 text-amber-400" />
+                      <IconAlertTriangle className="w-3 h-3 text-amber-600" />
                       <span>{w}</span>
                     </span>
                   ))}
                 </div>
 
                 {/* Action Toolbar */}
-                <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between flex-wrap gap-3">
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between flex-wrap gap-3">
                   <button
                     onClick={() => setAnalysisModalMatchId(item.id)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-indigo-600/30 text-slate-200 hover:text-indigo-200 border border-slate-700 hover:border-indigo-500/40 text-xs font-semibold transition"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 hover:text-blue-700 border border-slate-300 text-xs font-semibold shadow-sm transition"
                   >
-                    <Eye className="w-3.5 h-3.5" />
+                    <IconEye className="w-3.5 h-3.5 text-slate-500" />
                     <span>Inspect Full Analysis</span>
                   </button>
 
@@ -667,17 +752,17 @@ export default function ReviewQueuePage() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleOpenRejectModal(item)}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-rose-950/60 text-slate-300 hover:text-rose-300 border border-slate-700 hover:border-rose-800/60 text-xs font-semibold transition"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-300 hover:border-rose-300 text-xs font-semibold shadow-sm transition"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <IconX className="w-3.5 h-3.5" />
                         <span>Reject</span>
                       </button>
 
                       <button
                         onClick={() => handleOpenApproveModal(item)}
-                        className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/30 transition"
+                        className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold shadow-sm transition"
                       >
-                        <Check className="w-3.5 h-3.5" />
+                        <IconCheck className="w-3.5 h-3.5" />
                         <span>Approve & Harmonize</span>
                       </button>
                     </div>
@@ -687,10 +772,10 @@ export default function ReviewQueuePage() {
             );
           })
         ) : (
-          <div className="p-12 text-center bg-slate-900/50 border border-slate-800 rounded-xl space-y-3">
-            <CheckCircle2 className="w-10 h-10 text-slate-600 mx-auto" />
-            <h3 className="text-sm font-semibold text-slate-300">No matching recommendations found</h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+          <div className="p-12 text-center bg-white border border-slate-200 rounded-xl space-y-3 shadow-sm">
+            <IconCheckCircle className="w-10 h-10 text-slate-400 mx-auto" />
+            <h3 className="text-sm font-semibold text-slate-800">No matching recommendations found</h3>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
               No recommendations match your current filter settings ({statusFilter}, {classificationFilter || 'All Classifications'}).
             </p>
             <div className="pt-2 flex justify-center gap-3">
@@ -702,13 +787,13 @@ export default function ReviewQueuePage() {
                   setSearchTerm('');
                   setMinConfidence('');
                 }}
-                className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700"
+                className="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium border border-slate-300 shadow-sm"
               >
                 Reset Filters
               </button>
               <Link
                 to="/matching"
-                className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold"
+                className="px-3.5 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold shadow-sm"
               >
                 Go to AI Matching
               </Link>
@@ -719,46 +804,46 @@ export default function ReviewQueuePage() {
 
       {/* Approval Confirmation Dialog Modal */}
       {approvingMatch && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
           <div
-            className="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200"
+            className="w-full max-w-xl bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200 text-slate-900"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-emerald-950 text-emerald-400 border border-emerald-800/40">
-                  <FileCheck className="w-4 h-4" />
+                <div className="p-2 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <IconFileCheck className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Approve & Standardize Material Code</h3>
-                  <p className="text-xs text-slate-400">Match recommendation #MATCH-{approvingMatch.id}</p>
+                  <h3 className="text-sm font-bold text-slate-900">Approve & Standardize Material Code</h3>
+                  <p className="text-xs text-slate-500">Match recommendation #MATCH-{approvingMatch.id}</p>
                 </div>
               </div>
               <button
                 onClick={() => setApprovingMatch(null)}
-                className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white"
+                className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-700"
               >
-                <X className="w-4 h-4" />
+                <IconX className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 text-xs space-y-2">
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-indigo-400 font-semibold">{approvingMatch.material_a.cpse}</span>
-                <span className="font-mono text-slate-300">{approvingMatch.material_a.material_code}</span>
+                <span className="font-mono text-blue-700 font-semibold">{approvingMatch.material_a.cpse}</span>
+                <span className="font-mono text-slate-900 font-semibold">{approvingMatch.material_a.material_code}</span>
               </div>
-              <p className="text-slate-400 italic line-clamp-1">{approvingMatch.material_a.description}</p>
-              <div className="border-t border-slate-800 my-1" />
+              <p className="text-slate-600 italic line-clamp-1">{approvingMatch.material_a.description}</p>
+              <div className="border-t border-slate-200 my-1" />
               <div className="flex items-center justify-between">
-                <span className="font-mono text-indigo-400 font-semibold">{approvingMatch.material_b.cpse}</span>
-                <span className="font-mono text-slate-300">{approvingMatch.material_b.material_code}</span>
+                <span className="font-mono text-blue-700 font-semibold">{approvingMatch.material_b.cpse}</span>
+                <span className="font-mono text-slate-900 font-semibold">{approvingMatch.material_b.material_code}</span>
               </div>
-              <p className="text-slate-400 italic line-clamp-1">{approvingMatch.material_b.description}</p>
+              <p className="text-slate-600 italic line-clamp-1">{approvingMatch.material_b.description}</p>
             </div>
 
             {/* Common National Material Code Input */}
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-200 block">
+              <label className="text-xs font-semibold text-slate-900 block">
                 Assign Common National Material Code (NMC) *
               </label>
               <input
@@ -766,16 +851,16 @@ export default function ReviewQueuePage() {
                 value={commonCodeInput}
                 onChange={(e) => setCommonCodeInput(e.target.value.toUpperCase())}
                 placeholder="e.g. NMC-PIP-IS1239-50NB"
-                className="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-lg text-sm font-mono text-emerald-300 focus:outline-none focus:border-emerald-500"
+                className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-lg text-sm font-mono text-emerald-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
               />
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-500">
                 This code will standardize both CPSE items for consolidated public procurement. Original CPSE codes are strictly preserved.
               </p>
             </div>
 
             {/* Quick Suggestion Chips */}
             <div className="space-y-1">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-medium">Suggested Codes:</span>
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-medium">Suggested Codes:</span>
               <div className="flex flex-wrap gap-1.5">
                 {[
                   generateSuggestedCommonCode(approvingMatch),
@@ -786,7 +871,7 @@ export default function ReviewQueuePage() {
                     key={idx}
                     type="button"
                     onClick={() => setCommonCodeInput(s)}
-                    className="font-mono text-[10px] px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+                    className="font-mono text-[10px] px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition"
                   >
                     {s}
                   </button>
@@ -795,12 +880,12 @@ export default function ReviewQueuePage() {
             </div>
 
             {/* Modal Actions */}
-            <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-3 text-xs">
+            <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-3 text-xs">
               <button
                 type="button"
                 onClick={() => setApprovingMatch(null)}
                 disabled={submittingAction}
-                className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium"
+                className="px-4 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium transition"
               >
                 Cancel
               </button>
@@ -808,16 +893,16 @@ export default function ReviewQueuePage() {
                 type="button"
                 onClick={handleConfirmApproval}
                 disabled={submittingAction || !commonCodeInput.trim()}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-semibold transition shadow-sm disabled:opacity-50"
               >
                 {submittingAction ? (
                   <>
-                    <RotateCcw className="w-3.5 h-3.5 animate-spin" />
+                    <IconRotateCcw className="w-3.5 h-3.5 animate-spin" />
                     <span>Updating Database...</span>
                   </>
                 ) : (
                   <>
-                    <Check className="w-3.5 h-3.5" />
+                    <IconCheck className="w-3.5 h-3.5" />
                     <span>Confirm Approval & Assign</span>
                   </>
                 )}
@@ -829,43 +914,43 @@ export default function ReviewQueuePage() {
 
       {/* Rejection Confirmation Dialog Modal */}
       {rejectingMatch && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
           <div
-            className="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200"
+            className="w-full max-w-xl bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200 text-slate-900"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-rose-950 text-rose-400 border border-rose-800/40">
-                  <ShieldAlert className="w-4 h-4" />
+                <div className="p-2 rounded-lg bg-rose-50 text-rose-700 border border-rose-200">
+                  <IconShieldAlert className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Reject Recommendation</h3>
-                  <p className="text-xs text-slate-400">Recommendation #MATCH-{rejectingMatch.id}</p>
+                  <h3 className="text-sm font-bold text-slate-900">Reject Recommendation</h3>
+                  <p className="text-xs text-slate-500">Recommendation #MATCH-{rejectingMatch.id}</p>
                 </div>
               </div>
               <button
                 onClick={() => setRejectingMatch(null)}
-                className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white"
+                className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-700"
               >
-                <X className="w-4 h-4" />
+                <IconX className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               Rejecting this recommendation will flag it as non-equivalent. The CPSE material master records will remain completely untouched.
             </p>
 
             {/* Presets */}
             <div className="space-y-1.5">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-medium">Quick Rationale Presets:</span>
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-medium">Quick Rationale Presets:</span>
               <div className="flex flex-wrap gap-1.5">
                 {REJECTION_PRESETS.map((preset, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => setRejectionReasonInput(preset)}
-                    className="text-[11px] px-2 py-1 rounded bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-800 text-left"
+                    className="text-[11px] px-2.5 py-1 rounded bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-left transition"
                   >
                     {preset}
                   </button>
@@ -875,7 +960,7 @@ export default function ReviewQueuePage() {
 
             {/* Textarea for custom reason */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300 block">
+              <label className="text-xs font-semibold text-slate-800 block">
                 Rejection Rationale (Optional)
               </label>
               <textarea
@@ -883,17 +968,17 @@ export default function ReviewQueuePage() {
                 onChange={(e) => setRejectionReasonInput(e.target.value)}
                 placeholder="Enter details on why these materials are not functionally equivalent..."
                 rows={3}
-                className="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-rose-500"
+                className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-rose-600"
               />
             </div>
 
             {/* Modal Actions */}
-            <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-3 text-xs">
+            <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-3 text-xs">
               <button
                 type="button"
                 onClick={() => setRejectingMatch(null)}
                 disabled={submittingAction}
-                className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium"
+                className="px-4 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium transition"
               >
                 Cancel
               </button>
@@ -901,16 +986,16 @@ export default function ReviewQueuePage() {
                 type="button"
                 onClick={handleConfirmRejection}
                 disabled={submittingAction}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold transition disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-rose-700 hover:bg-rose-800 text-white font-semibold transition shadow-sm disabled:opacity-50"
               >
                 {submittingAction ? (
                   <>
-                    <RotateCcw className="w-3.5 h-3.5 animate-spin" />
+                    <IconRotateCcw className="w-3.5 h-3.5 animate-spin" />
                     <span>Rejecting...</span>
                   </>
                 ) : (
                   <>
-                    <X className="w-3.5 h-3.5" />
+                    <IconX className="w-3.5 h-3.5" />
                     <span>Confirm Rejection</span>
                   </>
                 )}

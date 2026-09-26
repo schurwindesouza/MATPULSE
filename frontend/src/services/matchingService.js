@@ -19,9 +19,11 @@ export const matchingService = {
     return response.data;
   },
 
-  // Trigger batch recommendation generation
+  // Trigger batch recommendation generation with extended 180s timeout
   async generateMatches(params = { top_k: 5, min_confidence: 70.0 }) {
-    const response = await api.post('/api/v1/matching/generate', params);
+    const response = await api.post('/api/v1/matching/generate', params, {
+      timeout: 180000,
+    });
     return response.data;
   },
 

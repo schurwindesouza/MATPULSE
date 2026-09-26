@@ -9,7 +9,8 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
+  // 180s (3 min) timeout to accommodate transformer embedding calculations across combinatorial material pairs
+  timeout: 180000,
 });
 
 // Response interceptor for consistent error extraction

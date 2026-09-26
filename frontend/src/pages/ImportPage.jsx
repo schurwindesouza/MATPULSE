@@ -1,25 +1,22 @@
 import React, { useState, useRef } from 'react';
 import {
-  UploadCloud,
-  FileSpreadsheet,
-  CheckCircle2,
-  AlertTriangle,
-  AlertCircle,
-  ArrowRight,
-  ArrowLeft,
-  X,
-  Building2,
-  Sparkles,
-  RefreshCw,
-  Layers,
-  Database,
-  Eye,
-  FileText,
-} from 'lucide-react';
+  IconUploadCloud,
+  IconFileSpreadsheet,
+  IconCheckCircle,
+  IconAlertTriangle,
+  IconAlertCircle,
+  IconArrowRight,
+  IconArrowLeft,
+  IconX,
+  IconBuilding,
+  IconSparkles,
+  IconRefresh,
+  IconDatabase,
+} from '../components/icons/Icons';
 import { useNavigate } from 'react-router-dom';
 import importService from '../services/importService';
 import matchingService from '../services/matchingService';
-import StatusBadge from '../components/StatusBadge';
+import materialService from '../services/materialService';
 
 const STEPS = [
   { id: 1, name: 'Upload' },
@@ -67,6 +64,8 @@ export default function ImportPage() {
   const [importResult, setImportResult] = useState(null);
   const [isHarmonizing, setIsHarmonizing] = useState(false);
   const [harmonizationResult, setHarmonizationResult] = useState(null);
+  const [materialStats, setMaterialStats] = useState(null);
+  const [pipelineStats, setPipelineStats] = useState(null);
 
   const navigate = useNavigate();
 
@@ -173,6 +172,17 @@ export default function ImportPage() {
       setError(null);
       const res = await matchingService.generateMatches({ top_k: 5, min_confidence: 70.0 });
       setHarmonizationResult(res);
+
+      try {
+        const [mStats, pStats] = await Promise.all([
+          materialService.getStats(),
+          matchingService.getMatchingStats(),
+        ]);
+        setMaterialStats(mStats);
+        setPipelineStats(pStats);
+      } catch (statsErr) {
+        console.error('Failed to load updated stats after harmonization', statsErr);
+      }
     } catch (err) {
       setError(err.message || 'Failed to execute AI harmonization pipeline');
     } finally {
@@ -183,21 +193,21 @@ export default function ImportPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="pb-2 border-b border-slate-800/80">
+      <div className="pb-4 border-b border-slate-200">
         <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold text-white tracking-tight">Import Material Master</h1>
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-950 text-indigo-300 border border-indigo-800/50">
-            <UploadCloud className="w-3 h-3" />
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Import Material Master</h1>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+            <IconUploadCloud className="w-3.5 h-3.5" />
             <span>CSV / XLSX Ingestion</span>
           </span>
         </div>
-        <p className="text-xs sm:text-sm text-slate-400 mt-1">
-          Upload and harmonize CPSE material catalog data with the AI matching engine.
+        <p className="text-xs sm:text-sm text-slate-600 mt-1">
+          Upload, schema-map, and validate enterprise CPSE catalog files with the AI harmonization pipeline.
         </p>
       </div>
 
       {/* 4-Step Workflow Indicator */}
-      <div className="bg-slate-900/90 border border-slate-800/80 rounded-xl p-4 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
         <div className="flex items-center justify-between">
           {STEPS.map((step, idx) => {
             const isCompleted = currentStep > step.id;
@@ -209,30 +219,30 @@ export default function ImportPage() {
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                       isCompleted
-                        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950'
+                        ? 'bg-emerald-600 text-white shadow-sm'
                         : isCurrent
-                        ? 'bg-indigo-600 text-white ring-4 ring-indigo-500/20'
-                        : 'bg-slate-800 text-slate-400 border border-slate-700'
+                        ? 'bg-blue-600 text-white ring-4 ring-blue-100 shadow-sm'
+                        : 'bg-slate-100 text-slate-400 border border-slate-200'
                     }`}
                   >
-                    {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : step.id}
+                    {isCompleted ? <IconCheckCircle className="w-4 h-4 text-white" /> : step.id}
                   </div>
                   <div className="hidden sm:block">
                     <p
                       className={`text-xs font-semibold ${
-                        isCurrent ? 'text-white' : isCompleted ? 'text-slate-200' : 'text-slate-500'
+                        isCurrent ? 'text-slate-900' : isCompleted ? 'text-slate-700' : 'text-slate-400'
                       }`}
                     >
                       {step.name}
                     </p>
-                    <p className="text-[10px] text-slate-500">Step {step.id}</p>
+                    <p className="text-[10px] text-slate-400">Step {step.id}</p>
                   </div>
                 </div>
 
                 {idx < STEPS.length - 1 && (
                   <div
                     className={`flex-1 h-0.5 mx-3 sm:mx-4 transition-colors ${
-                      isCompleted ? 'bg-emerald-500/60' : 'bg-slate-800'
+                      isCompleted ? 'bg-emerald-500' : 'bg-slate-200'
                     }`}
                   />
                 )}
@@ -244,26 +254,26 @@ export default function ImportPage() {
 
       {/* Global Error Banner */}
       {error && (
-        <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-800/60 text-rose-300 flex items-start justify-between gap-3 text-xs">
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-start justify-between gap-3 text-xs">
           <div className="flex items-start gap-2.5">
-            <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
+            <IconAlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold text-rose-200">Import Error</p>
-              <p className="mt-0.5 text-rose-300/80">{error}</p>
+              <p className="font-semibold text-rose-900">Import Error</p>
+              <p className="mt-0.5 text-rose-700">{error}</p>
             </div>
           </div>
           <button
             onClick={() => setError(null)}
-            className="p-1 rounded text-rose-400 hover:text-white"
+            className="p-1 rounded text-rose-500 hover:text-rose-800"
           >
-            <X className="w-4 h-4" />
+            <IconX className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* STEP 1: FILE UPLOAD */}
       {currentStep === 1 && (
-        <div className="bg-slate-900/90 border border-slate-800/80 rounded-xl p-6 shadow-sm space-y-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-6">
           <div
             onDragOver={(e) => {
               e.preventDefault();
@@ -271,10 +281,10 @@ export default function ImportPage() {
             }}
             onDragLeave={() => setIsDragOver(false)}
             onDrop={handleDrop}
-            className={`border-2 border-dashed rounded-2xl p-10 text-center transition-all cursor-pointer ${
+            className={`border-2 border-dashed rounded-xl p-10 text-center transition-all cursor-pointer ${
               isDragOver
-                ? 'border-indigo-500 bg-indigo-950/20'
-                : 'border-slate-700/80 hover:border-slate-600 bg-slate-950/40'
+                ? 'border-blue-500 bg-blue-50/50'
+                : 'border-slate-300 hover:border-slate-400 bg-slate-50/50'
             }`}
             onClick={() => fileInputRef.current?.click()}
           >
@@ -290,21 +300,21 @@ export default function ImportPage() {
               }}
             />
 
-            <div className="w-16 h-16 rounded-2xl bg-indigo-950/60 border border-indigo-800/40 text-indigo-400 flex items-center justify-center mx-auto mb-4">
-              <UploadCloud className="w-8 h-8" />
+            <div className="w-14 h-14 rounded-xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center mx-auto mb-4 shadow-sm">
+              <IconUploadCloud className="w-7 h-7" />
             </div>
 
-            <h3 className="text-base font-semibold text-white">
-              Drag & drop your material master file here
+            <h3 className="text-base font-semibold text-slate-900">
+              Drag & drop your CPSE material catalog file here
             </h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Supports CSV (.csv) and Microsoft Excel (.xlsx) up to 15 MB.
+            <p className="text-xs text-slate-500 mt-1">
+              Supports CSV (.csv) and Microsoft Excel (.xlsx) files up to 15 MB.
             </p>
 
             <div className="mt-4">
               <button
                 type="button"
-                className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/30 transition"
+                className="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold shadow-sm transition"
               >
                 Browse Files
               </button>
@@ -313,14 +323,14 @@ export default function ImportPage() {
 
           {/* Selected File Card */}
           {file && (
-            <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="p-2.5 rounded-lg bg-slate-800 text-indigo-400">
-                  <FileSpreadsheet className="w-5 h-5" />
+                <div className="p-2 rounded-lg bg-white border border-slate-200 text-blue-600 shadow-sm">
+                  <IconFileSpreadsheet className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-white truncate">{file.name}</p>
-                  <p className="text-[11px] text-slate-400 font-mono">
+                  <p className="text-xs font-semibold text-slate-900 truncate">{file.name}</p>
+                  <p className="text-[11px] text-slate-500 font-mono">
                     {(file.size / 1024).toFixed(1)} KB • {file.name.split('.').pop()?.toUpperCase()}
                   </p>
                 </div>
@@ -329,24 +339,24 @@ export default function ImportPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setFile(null)}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 font-medium transition"
+                  className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-xs text-slate-700 border border-slate-300 font-medium transition shadow-sm"
                 >
                   Remove
                 </button>
                 <button
                   onClick={handleProceedToMapping}
                   disabled={loading}
-                  className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/30 transition disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold shadow-sm transition disabled:opacity-50"
                 >
                   {loading ? (
                     <>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <IconRefresh className="w-3.5 h-3.5 animate-spin" />
                       <span>Inspecting...</span>
                     </>
                   ) : (
                     <>
                       <span>Continue to Mapping</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <IconArrowRight className="w-3.5 h-3.5" />
                     </>
                   )}
                 </button>
@@ -358,43 +368,43 @@ export default function ImportPage() {
 
       {/* STEP 2: COLUMN MAPPING */}
       {currentStep === 2 && (
-        <div className="bg-slate-900/90 border border-slate-800/80 rounded-xl p-6 shadow-sm space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
+        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
             <div>
-              <h2 className="text-base font-bold text-white">Map Catalog Columns to MATPULSE Schema</h2>
-              <p className="text-xs text-slate-400">
+              <h2 className="text-base font-bold text-slate-900">Map Catalog Columns to MATPULSE Schema</h2>
+              <p className="text-xs text-slate-500">
                 Match your uploaded spreadsheet headers to the standard master data fields.
               </p>
             </div>
-            <div className="text-xs font-mono text-slate-400 bg-slate-950 px-2.5 py-1 rounded border border-slate-800">
+            <div className="text-xs font-mono text-slate-600 bg-slate-100 px-2.5 py-1 rounded border border-slate-200">
               {fileHeaders.length} columns detected
             </div>
           </div>
 
           {/* Mapping Table */}
-          <div className="border border-slate-800 rounded-xl overflow-hidden">
+          <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] font-semibold border-b border-slate-800">
+              <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] font-semibold border-b border-slate-200">
                 <tr>
                   <th className="py-3 px-4">MATPULSE Master Field</th>
                   <th className="py-3 px-4">Requirement</th>
                   <th className="py-3 px-4">Uploaded File Column</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 text-slate-300">
+              <tbody className="divide-y divide-slate-100 text-slate-700">
                 {Object.entries(targetFields).map(([fieldKey, fieldInfo]) => (
-                  <tr key={fieldKey} className="hover:bg-slate-800/30">
-                    <td className="py-3 px-4 font-medium text-slate-200">
+                  <tr key={fieldKey} className="hover:bg-slate-50">
+                    <td className="py-3 px-4 font-medium text-slate-900">
                       {fieldInfo.label}
                       <span className="block font-mono text-[10px] text-slate-500">{fieldKey}</span>
                     </td>
                     <td className="py-3 px-4">
                       {fieldInfo.required ? (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-950 text-indigo-300 border border-indigo-800/50">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
                           REQUIRED
                         </span>
                       ) : (
-                        <span className="text-[10px] text-slate-500 font-mono">OPTIONAL</span>
+                        <span className="text-[10px] text-slate-400 font-mono">OPTIONAL</span>
                       )}
                     </td>
                     <td className="py-3 px-4">
@@ -406,7 +416,7 @@ export default function ImportPage() {
                             [fieldKey]: e.target.value || null,
                           }))
                         }
-                        className="w-full max-w-xs px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-indigo-500/70"
+                        className="w-full max-w-xs px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:border-blue-600"
                       >
                         <option value="">-- Do not map --</option>
                         {fileHeaders.map((header) => (
@@ -424,19 +434,19 @@ export default function ImportPage() {
 
           {/* CPSE Fallback Option */}
           {!columnMapping.cpse && (
-            <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-800/40 space-y-3 text-xs">
-              <div className="flex items-center gap-2 text-amber-300 font-semibold">
-                <Building2 className="w-4 h-4 text-amber-400" />
+            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 space-y-3 text-xs">
+              <div className="flex items-center gap-2 text-amber-900 font-semibold">
+                <IconBuilding className="w-4 h-4 text-amber-600" />
                 <span>No CPSE Column Mapped — Specify Organization</span>
               </div>
-              <p className="text-amber-200/80 text-[11px]">
+              <p className="text-amber-800 text-[11px]">
                 Since your uploaded file does not include a dedicated CPSE column, select the organization that will be assigned to all records:
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <select
                   value={defaultCpse}
                   onChange={(e) => setDefaultCpse(e.target.value)}
-                  className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500"
+                  className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-blue-600"
                 >
                   <option value="">-- Select CPSE Organization --</option>
                   {COMMON_CPSES.map((c) => (
@@ -453,7 +463,7 @@ export default function ImportPage() {
                     placeholder="Enter CPSE acronym (e.g. NHPC)"
                     value={customCpse}
                     onChange={(e) => setCustomCpse(e.target.value.toUpperCase())}
-                    className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white font-mono uppercase focus:outline-none focus:border-indigo-500"
+                    className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 font-mono uppercase focus:outline-none focus:border-blue-600"
                   />
                 )}
               </div>
@@ -461,29 +471,29 @@ export default function ImportPage() {
           )}
 
           {/* Buttons */}
-          <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+          <div className="flex items-center justify-between pt-4 border-t border-slate-200">
             <button
               onClick={() => setCurrentStep(1)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 transition"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white hover:bg-slate-50 text-xs font-medium text-slate-700 border border-slate-300 shadow-sm transition"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
+              <IconArrowLeft className="w-3.5 h-3.5" />
               <span>Back</span>
             </button>
 
             <button
               onClick={handleProceedToValidation}
               disabled={loading}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/30 transition disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold shadow-sm transition disabled:opacity-50"
             >
               {loading ? (
                 <>
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <IconRefresh className="w-3.5 h-3.5 animate-spin" />
                   <span>Validating...</span>
                 </>
               ) : (
                 <>
                   <span>Validate Dataset</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <IconArrowRight className="w-3.5 h-3.5" />
                 </>
               )}
             </button>
@@ -493,55 +503,92 @@ export default function ImportPage() {
 
       {/* STEP 3: VALIDATE & PREVIEW */}
       {currentStep === 3 && validationReport && (
-        <div className="bg-slate-900/90 border border-slate-800/80 rounded-xl p-6 shadow-sm space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
+        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
             <div>
-              <h2 className="text-base font-bold text-white">Dataset Validation & Preview</h2>
-              <p className="text-xs text-slate-400">
-                Review validation results and inspect parsed records before writing to the database.
+              <h2 className="text-base font-bold text-slate-900">Dataset Validation & Preview</h2>
+              <p className="text-xs text-slate-500">
+                Review validation results and inspect parsed records before committing to the database.
               </p>
             </div>
           </div>
 
           {/* Validation Metrics Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800">
-              <span className="text-[10px] uppercase font-semibold text-slate-400 block">Total Rows</span>
-              <span className="font-mono text-2xl font-bold text-white mt-1 block">
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+              <span className="text-[10px] uppercase font-semibold text-slate-500 block">Total Rows</span>
+              <span className="font-mono text-2xl font-bold text-slate-900 mt-1 block">
                 {validationReport.total_rows}
               </span>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-emerald-950/20 border border-emerald-800/40">
-              <span className="text-[10px] uppercase font-semibold text-emerald-400 block">✓ Valid Records</span>
-              <span className="font-mono text-2xl font-bold text-emerald-300 mt-1 block">
+            <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+              <span className="text-[10px] uppercase font-semibold text-emerald-800 block">✓ Valid Records</span>
+              <span className="font-mono text-2xl font-bold text-emerald-700 mt-1 block">
                 {validationReport.valid_count}
               </span>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-amber-950/20 border border-amber-800/40">
-              <span className="text-[10px] uppercase font-semibold text-amber-400 block">⚠ Duplicates (Skip)</span>
-              <span className="font-mono text-2xl font-bold text-amber-300 mt-1 block">
+            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200">
+              <span className="text-[10px] uppercase font-semibold text-amber-800 block">⚠ Duplicates (Skip)</span>
+              <span className="font-mono text-2xl font-bold text-amber-700 mt-1 block">
                 {validationReport.duplicate_count}
               </span>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-rose-950/20 border border-rose-800/40">
-              <span className="text-[10px] uppercase font-semibold text-rose-400 block">✕ Invalid Rows</span>
-              <span className="font-mono text-2xl font-bold text-rose-300 mt-1 block">
+            <div className="p-4 rounded-xl bg-rose-50 border border-rose-200">
+              <span className="text-[10px] uppercase font-semibold text-rose-800 block">✕ Invalid Rows</span>
+              <span className="font-mono text-2xl font-bold text-rose-700 mt-1 block">
                 {validationReport.invalid_count}
               </span>
             </div>
           </div>
 
+          {/* Duplicate Records Explanatory Notice */}
+          {validationReport.duplicate_count > 0 && validationReport.valid_count === 0 && (
+            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-sm">
+              <div className="flex items-start gap-2.5">
+                <IconAlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-semibold text-amber-900">
+                    {validationReport.duplicate_count} duplicate material codes were found. Existing records were not imported again.
+                  </p>
+                  <p className="text-amber-800 leading-relaxed">
+                    No new material records were imported. These material codes already exist in the Material Master. Duplicate rows are not data errors; existing records are preserved without duplication.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate('/materials')}
+                className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-xs font-semibold text-slate-800 border border-amber-300 shadow-sm transition whitespace-nowrap self-start sm:self-center"
+              >
+                View in Material Master
+              </button>
+            </div>
+          )}
+
+          {validationReport.duplicate_count > 0 && validationReport.valid_count > 0 && (
+            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-2.5 text-xs shadow-sm">
+              <IconAlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-amber-900">
+                  {validationReport.duplicate_count} duplicate material codes were found. Existing records were not imported again.
+                </p>
+                <p className="text-amber-800 mt-0.5">
+                  The {validationReport.valid_count} new unique records will be imported into the Material Master catalog, while duplicate codes already in the database will be safely skipped.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Warnings Callout */}
           {validationReport.warnings && validationReport.warnings.length > 0 && (
-            <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-800/40 space-y-2 text-xs">
-              <div className="flex items-center gap-2 text-amber-300 font-semibold">
-                <AlertTriangle className="w-4 h-4 text-amber-400" />
+            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 space-y-2 text-xs">
+              <div className="flex items-center gap-2 text-amber-900 font-semibold">
+                <IconAlertTriangle className="w-4 h-4 text-amber-600" />
                 <span>Validation Notices</span>
               </div>
-              <ul className="space-y-1 text-amber-200/90 text-xs">
+              <ul className="space-y-1 text-amber-800 text-xs">
                 {validationReport.warnings.map((w, idx) => (
                   <li key={idx}>• {w}</li>
                 ))}
@@ -552,17 +599,17 @@ export default function ImportPage() {
           {/* Preview Table */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-300">
+              <span className="text-xs font-semibold text-slate-900">
                 Sample Valid Records (showing first {validationReport.preview_records.length})
               </span>
-              <span className="text-[10px] font-mono text-slate-400">
+              <span className="text-[10px] font-mono text-slate-500">
                 Material Master Schema Preview
               </span>
             </div>
 
-            <div className="border border-slate-800 rounded-xl overflow-x-auto">
+            <div className="border border-slate-200 rounded-xl overflow-x-auto shadow-sm">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] font-semibold border-b border-slate-800">
+                <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] font-semibold border-b border-slate-200">
                   <tr>
                     <th className="py-2.5 px-3">CPSE</th>
                     <th className="py-2.5 px-3">Material Code</th>
@@ -571,16 +618,16 @@ export default function ImportPage() {
                     <th className="py-2.5 px-3">UOM</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                <tbody className="divide-y divide-slate-100 text-slate-700">
                   {validationReport.preview_records.map((r, i) => (
-                    <tr key={i} className="hover:bg-slate-800/30">
-                      <td className="py-2 px-3 font-mono font-bold text-indigo-300 text-[11px]">{r.cpse}</td>
-                      <td className="py-2 px-3 font-mono text-white text-[11px]">{r.material_code}</td>
-                      <td className="py-2 px-3 truncate max-w-[260px]" title={r.description}>
+                    <tr key={i} className="hover:bg-slate-50">
+                      <td className="py-2 px-3 font-mono font-medium text-slate-800 text-[11px]">{r.cpse}</td>
+                      <td className="py-2 px-3 font-mono text-slate-900 font-semibold text-[11px]">{r.material_code}</td>
+                      <td className="py-2 px-3 truncate max-w-[260px] text-slate-800" title={r.description}>
                         {r.description}
                       </td>
-                      <td className="py-2 px-3 text-slate-400">{r.category || '—'}</td>
-                      <td className="py-2 px-3 font-mono">{r.uom || '—'}</td>
+                      <td className="py-2 px-3 text-slate-600">{r.category || '—'}</td>
+                      <td className="py-2 px-3 font-mono text-slate-700">{r.uom || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -589,51 +636,64 @@ export default function ImportPage() {
           </div>
 
           {/* Buttons */}
-          <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+          <div className="flex items-center justify-between pt-4 border-t border-slate-200">
             <button
               onClick={() => setCurrentStep(2)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 transition"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white hover:bg-slate-50 text-xs font-medium text-slate-700 border border-slate-300 shadow-sm transition"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
+              <IconArrowLeft className="w-3.5 h-3.5" />
               <span>Back to Mapping</span>
             </button>
 
-            <button
-              onClick={handleExecuteImport}
-              disabled={loading || validationReport.valid_count === 0}
-              className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-md shadow-emerald-600/30 transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <>
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Importing Records...</span>
-                </>
-              ) : (
-                <>
-                  <Database className="w-3.5 h-3.5" />
-                  <span>Import {validationReport.valid_count} Valid Records</span>
-                </>
-              )}
-            </button>
+            {validationReport.valid_count === 0 ? (
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-slate-500 font-medium">All records already exist in Material Master.</span>
+                <button
+                  onClick={() => navigate('/materials')}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold shadow-sm transition"
+                >
+                  <span>View Material Master</span>
+                  <IconArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleExecuteImport}
+                disabled={loading}
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <IconRefresh className="w-3.5 h-3.5 animate-spin" />
+                    <span>Importing Records...</span>
+                  </>
+                ) : (
+                  <>
+                    <IconDatabase className="w-3.5 h-3.5" />
+                    <span>Import {validationReport.valid_count} Valid Records</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       )}
 
       {/* STEP 4: HARMONIZE */}
       {currentStep === 4 && importResult && (
-        <div className="bg-slate-900/90 border border-slate-800/80 rounded-xl p-6 shadow-sm space-y-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-6">
           {/* Import Complete Banner */}
-          <div className="p-5 rounded-xl bg-emerald-950/30 border border-emerald-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="p-5 rounded-xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-emerald-900/50 text-emerald-400 border border-emerald-700/50">
-                <CheckCircle2 className="w-6 h-6" />
+              <div className="p-2 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300">
+                <IconCheckCircle className="w-6 h-6 text-emerald-700" />
               </div>
               <div>
-                <h2 className="text-base font-bold text-white">Catalog Import Complete</h2>
-                <p className="text-xs text-emerald-300/90 mt-0.5">
-                  <strong>{importResult.records_imported}</strong> material master records imported into the SQLite database.
+                <h2 className="text-base font-bold text-slate-900">Catalog Import Complete</h2>
+                <p className="text-xs text-emerald-800 mt-0.5">
+                  <strong>{importResult.records_imported}</strong> material master records successfully imported into the SQLite database.
                 </p>
-                <p className="text-[11px] text-slate-400 mt-1">
+                <p className="text-[11px] text-slate-500 mt-1">
                   {importResult.records_skipped} duplicate codes skipped • {importResult.records_rejected} invalid rows rejected.
                 </p>
               </div>
@@ -641,35 +701,48 @@ export default function ImportPage() {
 
             <button
               onClick={() => navigate('/materials')}
-              className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition self-start sm:self-center"
+              className="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 border border-slate-300 shadow-sm transition self-start sm:self-center"
             >
               View in Materials Master
             </button>
           </div>
 
-          {/* AI Harmonization Action Card */}
-          <div className="p-6 rounded-xl bg-slate-950/80 border border-slate-800 space-y-4">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-indigo-400" />
-              <h3 className="text-sm font-bold text-white">Run AI Harmonization on Imported Catalog</h3>
+          {/* AI Harmonization In-Progress Banner */}
+          {isHarmonizing && (
+            <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 flex items-start gap-3 text-xs shadow-sm">
+              <IconRefresh className="w-5 h-5 text-blue-600 animate-spin flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-semibold text-blue-900">AI Harmonization in Progress</p>
+                <p className="text-blue-800 leading-relaxed">
+                  Analyzing material records and generating cross-CPSE match recommendations... Please keep this page open while the matching engine completes.
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed max-w-2xl">
+          )}
+
+          {/* AI Harmonization Action Card */}
+          <div className="p-6 rounded-xl bg-slate-50 border border-slate-200 space-y-4">
+            <div className="flex items-center gap-2">
+              <IconSparkles className="w-5 h-5 text-blue-600" />
+              <h3 className="text-sm font-bold text-slate-900">Run AI Harmonization on Imported Catalog</h3>
+            </div>
+            <p className="text-xs text-slate-600 leading-relaxed max-w-2xl">
               Now that the new material records are stored in the Material Master catalog, trigger the sentence transformer and technical attribute matching engine to identify equivalent items across existing CPSE catalogs (BHEL, NTPC, ONGC, SAIL, IOCL, etc.).
             </p>
 
             <button
               onClick={handleRunHarmonization}
               disabled={isHarmonizing}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/30 transition disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold shadow-sm transition disabled:opacity-50"
             >
               {isHarmonizing ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <IconRefresh className="w-4 h-4 animate-spin" />
                   <span>Analyzing CPSE catalogs with AI Matching Engine...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4" />
+                  <IconSparkles className="w-4 h-4" />
                   <span>Run AI Harmonization</span>
                 </>
               )}
@@ -678,42 +751,56 @@ export default function ImportPage() {
 
           {/* Harmonization Results */}
           {harmonizationResult && (
-            <div className="p-5 rounded-xl bg-indigo-950/30 border border-indigo-800/40 space-y-4">
-              <div className="flex items-center justify-between">
+            <div className="p-5 rounded-xl bg-blue-50 border border-blue-200 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-300">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-blue-900">
                     AI Harmonization Results
                   </h4>
-                  <p className="text-xs text-slate-300 mt-1">
+                  <p className="text-xs text-blue-800 mt-1">
                     Evaluated cross-CPSE candidate pairs. Found <strong>{harmonizationResult.total_candidates}</strong> potential recommendations.
                   </p>
                 </div>
-                <button
-                  onClick={() => navigate('/matching')}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/30 transition"
-                >
-                  <span>View AI Matches</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => navigate('/reviews')}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold shadow-sm transition"
+                  >
+                    <span>View Review Queue</span>
+                    <IconArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => navigate('/matching')}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold shadow-sm transition"
+                  >
+                    <span>AI Matching</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3 pt-2 text-xs">
-                <div className="p-3 rounded-lg bg-slate-900 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block">Total Candidates</span>
-                  <span className="font-mono text-lg font-bold text-white mt-0.5 block">
-                    {harmonizationResult.total_candidates}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs">
+                <div className="p-3.5 rounded-lg bg-white border border-blue-200 shadow-sm">
+                  <span className="text-[10px] text-slate-500 block uppercase font-medium">Materials Analyzed</span>
+                  <span className="font-mono text-xl font-bold text-slate-900 mt-0.5 block">
+                    {materialStats?.total_materials ?? '—'}
                   </span>
                 </div>
-                <div className="p-3 rounded-lg bg-slate-900 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block">New Recommendations</span>
-                  <span className="font-mono text-lg font-bold text-emerald-400 mt-0.5 block">
-                    {harmonizationResult.matches_created}
+                <div className="p-3.5 rounded-lg bg-white border border-blue-200 shadow-sm">
+                  <span className="text-[10px] text-slate-500 block uppercase font-medium">Candidate Matches</span>
+                  <span className="font-mono text-xl font-bold text-blue-700 mt-0.5 block">
+                    {pipelineStats?.total_recommendations ?? harmonizationResult.total_candidates}
                   </span>
                 </div>
-                <div className="p-3 rounded-lg bg-slate-900 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block">Existing Pairs</span>
-                  <span className="font-mono text-lg font-bold text-slate-400 mt-0.5 block">
-                    {harmonizationResult.matches_skipped}
+                <div className="p-3.5 rounded-lg bg-white border border-blue-200 shadow-sm">
+                  <span className="text-[10px] text-slate-500 block uppercase font-medium">High Confidence</span>
+                  <span className="font-mono text-xl font-bold text-emerald-700 mt-0.5 block">
+                    {pipelineStats?.high_confidence_count ?? '—'}
+                  </span>
+                </div>
+                <div className="p-3.5 rounded-lg bg-white border border-blue-200 shadow-sm">
+                  <span className="text-[10px] text-slate-500 block uppercase font-medium">Requiring Review</span>
+                  <span className="font-mono text-xl font-bold text-amber-700 mt-0.5 block">
+                    {pipelineStats?.review_required_count ?? '—'}
                   </span>
                 </div>
               </div>
