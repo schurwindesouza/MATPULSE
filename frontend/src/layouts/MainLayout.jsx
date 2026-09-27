@@ -19,6 +19,7 @@ import {
   IconBoxes,
 } from '../components/icons/Icons';
 import materialService from '../services/materialService';
+import matpulseLogo from '../assets/matpulse-logo.png';
 
 const NAV_ITEMS = [
   { name: 'Dashboard', path: '/dashboard', icon: IconActivity },
@@ -85,18 +86,20 @@ export default function MainLayout() {
       >
         {/* Brand Header */}
         <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-700 flex items-center justify-center font-bold text-white shadow-sm">
-              <IconActivity className="w-4 h-4" />
-            </div>
-            <div>
+          <Link to="/" className="flex items-center gap-3 min-w-0" title="MATPULSE Home">
+            <img
+              src={matpulseLogo}
+              alt="MATPULSE Logo"
+              className="h-11 w-auto max-w-[85px] object-contain flex-shrink-0"
+              style={{ objectFit: 'contain' }}
+            />
+            <div className="flex flex-col justify-center min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="font-bold text-base tracking-tight text-slate-900 font-mono">MATPULSE</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-mono border border-blue-200 font-semibold">
                   v1.0
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 font-normal leading-tight">
+              <p className="text-[11px] text-slate-500 font-normal leading-tight mt-0.5">
                 CPSE Material Standardization
               </p>
             </div>

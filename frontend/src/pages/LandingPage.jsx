@@ -19,6 +19,7 @@ import {
   IconBarChart,
   IconCheck,
 } from '../components/icons/Icons';
+import SplineBackground from '../components/SplineBackground';
 
 export default function LandingPage() {
   const [activeStep, setActiveStep] = useState(0);
@@ -68,93 +69,72 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-100 selection:text-blue-900">
-      {/* 1. Global Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-700 text-white flex items-center justify-center font-bold shadow-sm">
-              <IconActivity className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="font-bold text-base tracking-tight text-slate-900 font-mono">MATPULSE</span>
-              <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-600 border border-slate-200">
-                SIH 26099
-              </span>
-            </div>
-          </div>
-
-          <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-slate-600">
-            <a href="#problem" className="hover:text-blue-700 transition">Problem</a>
-            <a href="#workflow" className="hover:text-blue-700 transition">Methodology</a>
-            <a href="#intelligence" className="hover:text-blue-700 transition">AI &amp; Rules</a>
-            <a href="#governance" className="hover:text-blue-700 transition">Human Review</a>
-            <a href="#analytics" className="hover:text-blue-700 transition">Analytics</a>
-          </nav>
-
-          <div className="flex items-center gap-3">
+      {/* 1. Transparent Global Navigation Bar (Top-Right) */}
+      <header className="absolute top-0 left-0 right-0 z-20 bg-transparent border-none shadow-none pointer-events-none">
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 h-20 sm:h-24 flex items-center justify-end">
+          <nav className="flex items-center gap-8 sm:gap-12 pointer-events-auto">
             <a
-              href="http://127.0.0.1:8000/docs"
-              target="_blank"
-              rel="noreferrer"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition border border-transparent hover:border-slate-200"
+              href="#home"
+              className="text-xs sm:text-sm font-semibold tracking-widest uppercase text-white hover:text-white/70 transition-colors duration-200"
             >
-              <span>API Specs</span>
-              <IconExternalLink className="w-3.5 h-3.5" />
+              HOME
             </a>
-
-            <Link
-              to="/dashboard"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold shadow-sm transition"
+            <a
+              href="#about"
+              className="text-xs sm:text-sm font-semibold tracking-widest uppercase text-white hover:text-white/70 transition-colors duration-200"
             >
-              <span>Launch Platform</span>
-              <IconArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
+              ABOUT
+            </a>
+            <a
+              href="#contact"
+              className="text-xs sm:text-sm font-semibold tracking-widest uppercase text-white hover:text-white/70 transition-colors duration-200"
+            >
+              CONTACT US
+            </a>
+          </nav>
         </div>
       </header>
 
-      {/* 2. Hero Section */}
-      <section className="relative pt-16 pb-20 px-4 sm:px-6 lg:px-8 border-b border-slate-200 bg-gradient-to-b from-white to-slate-50">
-        <div className="max-w-5xl mx-auto text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-xs font-medium">
-            <IconShieldCheck className="w-3.5 h-3.5 text-blue-700" />
-            <span>Smart India Hackathon • Problem Statement 26099</span>
-          </div>
+      {/* 2. Hero Section with Full-Screen Spline 3D Scene Background */}
+      <section
+        id="home"
+        className="relative w-full h-screen min-h-[100vh] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 overflow-hidden text-white bg-black"
+        style={{ position: 'relative', width: '100%', height: '100vh', minHeight: '100vh', overflow: 'hidden', backgroundColor: '#000' }}
+      >
+        {/* Full-screen animated 3D Spline background */}
+        <SplineBackground />
 
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
-            AI-Assisted Material Harmonization Across Central Public Sector Enterprises
+        {/* Minimal Centered Hero Content - positioned slightly above ribbons for optimal contrast */}
+        <div
+          className="relative z-10 max-w-4xl mx-auto text-center space-y-5 sm:space-y-6 pointer-events-none -translate-y-8 sm:-translate-y-12 md:-translate-y-14 transition-transform duration-300"
+          style={{ position: 'relative', zIndex: 10 }}
+        >
+          {/* Dominant Application Title */}
+          <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[7rem] xl:text-[8rem] font-black tracking-tight text-white uppercase select-none leading-none">
+            MATPULSE
           </h1>
 
-          <p className="text-base sm:text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed font-normal">
-            Reconciling disparate internal catalog codes across public sector enterprises into unified
-            <strong className="text-slate-900 font-semibold"> Common National Material Codes </strong>
-            through domain-specific AI, deterministic rule validation, and human-in-the-loop review.
+          {/* Clean Tagline */}
+          <p className="text-sm sm:text-base md:text-lg lg:text-xl font-normal text-white max-w-2xl mx-auto leading-relaxed select-none px-4">
+            Ai powered material standardization and harmonization for CPSEs
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          {/* Minimal Elegant White Button */}
+          <div className="pt-2 sm:pt-4">
             <Link
               to="/dashboard"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold shadow-sm transition"
+              className="inline-flex items-center justify-center px-8 sm:px-9 py-3 sm:py-3.5 rounded-full bg-white hover:bg-white/90 text-black text-xs sm:text-sm font-semibold tracking-wider uppercase transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg pointer-events-auto cursor-pointer"
             >
-              <span>Open Application Console</span>
-              <IconArrowRight className="w-4 h-4" />
+              LAUNCH PLATFORM
             </Link>
-
-            <a
-              href="#problem"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold border border-slate-200 shadow-sm transition"
-            >
-              <span>Explore Technical Architecture</span>
-            </a>
           </div>
-
-          <p className="text-[11px] text-slate-400 font-mono pt-1">
-            FastAPI Backend • SQLite Master Store • Sentence Transformers (all-MiniLM-L6-v2) • React Console
-          </p>
         </div>
+      </section>
 
+      {/* 3. About & Problem Section */}
+      <section id="about" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-16">
         {/* Precision Industrial Topology Diagram */}
-        <div className="mt-12 max-w-5xl mx-auto bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+        <div className="max-w-5xl mx-auto bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
           <div className="flex items-center justify-between pb-4 border-b border-slate-100 text-xs">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -237,11 +217,9 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-      </section>
 
-      {/* 3. Problem Section */}
-      <section id="problem" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
-        <div className="max-w-3xl space-y-3">
+        {/* Problem Context */}
+        <div id="problem" className="max-w-3xl space-y-3">
           <span className="text-xs font-bold uppercase tracking-wider text-blue-700 font-mono">
             Problem Context
           </span>
@@ -541,8 +519,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 8. Final Call to Action */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-900 text-white">
+      {/* 8. Final Call to Action / Contact */}
+      <section id="contact" className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-900 text-white">
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
             Ready to Inspect the Working MATPULSE Platform?
