@@ -77,7 +77,7 @@ export default function SplineBackground({
     <div
       className={`spline-container ${className}`}
       style={{
-        position: 'absolute',
+        position: 'fixed',
         inset: 0,
         top: 0,
         left: 0,

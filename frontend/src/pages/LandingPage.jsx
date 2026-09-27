@@ -19,7 +19,6 @@ import {
   IconBarChart,
   IconCheck,
 } from '../components/icons/Icons';
-import SplineBackground from '../components/SplineBackground';
 
 export default function LandingPage() {
   const [activeStep, setActiveStep] = useState(0);
@@ -68,7 +67,7 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+    <div className="min-h-screen bg-transparent text-white selection:bg-blue-500/30 selection:text-blue-200">
       {/* 1. Transparent Global Navigation Bar (Top-Right) */}
       <header className="absolute top-0 left-0 right-0 z-20 bg-transparent border-none shadow-none pointer-events-none">
         <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 h-20 sm:h-24 flex items-center justify-end">
@@ -95,15 +94,12 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* 2. Hero Section with Full-Screen Spline 3D Scene Background */}
+      {/* 2. Hero Section - Spline is globally fixed underneath */}
       <section
         id="home"
-        className="relative w-full h-screen min-h-[100vh] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 overflow-hidden text-white bg-black"
-        style={{ position: 'relative', width: '100%', height: '100vh', minHeight: '100vh', overflow: 'hidden', backgroundColor: '#000' }}
+        className="relative w-full h-screen min-h-[100vh] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 overflow-hidden text-white"
+        style={{ position: 'relative', width: '100%', height: '100vh', minHeight: '100vh', overflow: 'hidden' }}
       >
-        {/* Full-screen animated 3D Spline background */}
-        <SplineBackground />
-
         {/* Minimal Centered Hero Content - positioned slightly above ribbons for optimal contrast */}
         <div
           className="relative z-10 max-w-4xl mx-auto text-center space-y-5 sm:space-y-6 pointer-events-none -translate-y-8 sm:-translate-y-12 md:-translate-y-14 transition-transform duration-300"
@@ -131,22 +127,22 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 3. About & Problem Section */}
+      {/* 3. About & Problem Section in Glassmorphism */}
       <section id="about" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-16">
         {/* Precision Industrial Topology Diagram */}
-        <div className="max-w-5xl mx-auto bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100 text-xs">
+        <div className="max-w-5xl mx-auto glass-panel rounded-3xl p-6 sm:p-8 shadow-2xl">
+          <div className="flex items-center justify-between pb-4 border-b border-white/10 text-xs">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-semibold text-slate-900">Federated Convergence Topology</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-semibold text-white">Federated Convergence Topology</span>
             </div>
-            <span className="font-mono text-slate-500">6 Connected CPSE Master Catalogs</span>
+            <span className="font-mono text-white/50">6 Connected CPSE Master Catalogs</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
             {/* Left: Input Catalogs */}
             <div className="space-y-3">
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              <p className="text-[11px] font-semibold text-white/40 uppercase tracking-wider">
                 Raw Enterprise Catalogs (Divergent)
               </p>
               <div className="space-y-2">
@@ -155,12 +151,12 @@ export default function LandingPage() {
                   { cpse: 'NTPC', code: 'SYN-NTPC-P-44021', desc: 'Seamless CS Pipe 2" NB Sch 40' },
                   { cpse: 'ONGC', code: 'SYN-ONGC-PIPE-02', desc: 'LINE PIPE CS 2 IN SCH 40 SMLS' },
                 ].map((item) => (
-                  <div key={item.cpse} className="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
+                  <div key={item.cpse} className="p-3 rounded-xl bg-white/[0.04] border border-white/10 space-y-1">
                     <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs font-bold text-slate-800">{item.cpse}</span>
-                      <span className="text-[10px] font-mono text-slate-500">{item.code}</span>
+                      <span className="font-mono text-xs font-bold text-white">{item.cpse}</span>
+                      <span className="text-[10px] font-mono text-blue-300">{item.code}</span>
                     </div>
-                    <p className="text-[11px] text-slate-600 truncate">{item.desc}</p>
+                    <p className="text-[11px] text-white/70 truncate">{item.desc}</p>
                   </div>
                 ))}
               </div>
@@ -168,23 +164,23 @@ export default function LandingPage() {
 
             {/* Middle: AI & Rules Engine */}
             <div className="space-y-3 flex flex-col justify-center">
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider text-center">
+              <p className="text-[11px] font-semibold text-white/40 uppercase tracking-wider text-center">
                 MATPULSE Harmonization Engine
               </p>
-              <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 space-y-3">
-                <div className="flex items-center gap-2 text-xs font-semibold text-blue-900">
-                  <IconCpu className="w-4 h-4 text-blue-700" />
+              <div className="p-4 rounded-2xl bg-blue-500/[0.08] border border-blue-400/30 space-y-3 shadow-lg shadow-blue-500/10">
+                <div className="flex items-center gap-2 text-xs font-semibold text-blue-300">
+                  <IconCpu className="w-4 h-4 text-blue-400" />
                   <span>AI Semantic Embeddings</span>
                 </div>
-                <div className="h-1.5 w-full bg-blue-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-700 rounded-full w-4/5" />
+                <div className="h-1.5 w-full bg-blue-900/40 rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 rounded-full w-4/5" />
                 </div>
-                <div className="flex items-center gap-2 text-xs font-semibold text-blue-900 pt-1">
-                  <IconShieldCheck className="w-4 h-4 text-emerald-700" />
+                <div className="flex items-center gap-2 text-xs font-semibold text-blue-300 pt-1">
+                  <IconShieldCheck className="w-4 h-4 text-emerald-400" />
                   <span>Deterministic Rule Validation</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs font-semibold text-blue-900 pt-1">
-                  <IconCheckCircle className="w-4 h-4 text-blue-700" />
+                <div className="flex items-center gap-2 text-xs font-semibold text-blue-300 pt-1">
+                  <IconCheckCircle className="w-4 h-4 text-blue-400" />
                   <span>Human Review Sign-off</span>
                 </div>
               </div>
@@ -192,23 +188,23 @@ export default function LandingPage() {
 
             {/* Right: Output Common Code */}
             <div className="space-y-3">
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              <p className="text-[11px] font-semibold text-white/40 uppercase tracking-wider">
                 Unified Common National Code
               </p>
-              <div className="p-4 rounded-xl bg-emerald-50/60 border border-emerald-200 space-y-3 h-[calc(100%-2rem)] flex flex-col justify-between">
+              <div className="p-4 rounded-2xl bg-emerald-500/[0.08] border border-emerald-400/30 space-y-3 h-[calc(100%-2rem)] flex flex-col justify-between shadow-lg shadow-emerald-500/10">
                 <div>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-100 text-emerald-800 font-semibold border border-emerald-300">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-400/40">
                     Harmonized Master Record
                   </span>
-                  <h4 className="text-base font-bold font-mono text-emerald-900 mt-2">
+                  <h4 className="text-base font-bold font-mono text-emerald-300 mt-2">
                     NMC-PIP-CS-50NB-40
                   </h4>
-                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                  <p className="text-xs text-white/70 mt-1 leading-relaxed">
                     Seamless Carbon Steel Pipe 50mm NB (2&quot;), Schedule 40, ASTM A106 Grade B.
                   </p>
                 </div>
 
-                <div className="pt-2 border-t border-emerald-200/60 text-[11px] text-emerald-800 space-y-1">
+                <div className="pt-2 border-t border-emerald-400/20 text-[11px] text-emerald-300 space-y-1">
                   <p>&bull; 3 Enterprise Catalogs Mapped</p>
                   <p>&bull; Original CPSE Codes 100% Intact</p>
                   <p>&bull; Single National Procurement Standard</p>
@@ -220,13 +216,13 @@ export default function LandingPage() {
 
         {/* Problem Context */}
         <div id="problem" className="max-w-3xl space-y-3">
-          <span className="text-xs font-bold uppercase tracking-wider text-blue-700 font-mono">
+          <span className="text-xs font-bold uppercase tracking-wider text-blue-400 font-mono">
             Problem Context
           </span>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
             The Cross-Enterprise Catalog Fragmentation Challenge
           </h2>
-          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+          <p className="text-sm sm:text-base text-white/70 leading-relaxed">
             In Indian public sector procurement, multiple Central Public Sector Enterprises independently procure
             identical physical engineering materials using disparate internal numbering systems, unstructured
             descriptions, and varied unit classifications.
@@ -234,35 +230,35 @@ export default function LandingPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 rounded-xl bg-white border border-slate-200 shadow-sm space-y-3">
-            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700 font-bold">
+          <div className="p-6 rounded-2xl glass-card glass-card-hover space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-white/[0.08] border border-white/10 flex items-center justify-center text-white font-bold font-mono">
               1
             </div>
-            <h3 className="text-base font-semibold text-slate-900">Isolated ERP Silos</h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
+            <h3 className="text-base font-semibold text-white">Isolated ERP Silos</h3>
+            <p className="text-xs text-white/70 leading-relaxed">
               BHEL, NTPC, ONGC, SAIL, IOCL, and Coal India operate distinct ERP instances. A 50 NB gate valve or
               seamless line pipe is logged under completely non-standardized code strings.
             </p>
           </div>
 
-          <div className="p-6 rounded-xl bg-white border border-slate-200 shadow-sm space-y-3">
-            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700 font-bold">
+          <div className="p-6 rounded-2xl glass-card glass-card-hover space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-white/[0.08] border border-white/10 flex items-center justify-center text-white font-bold font-mono">
               2
             </div>
-            <h3 className="text-base font-semibold text-slate-900">Token-Matching Failures</h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
+            <h3 className="text-base font-semibold text-white">Token-Matching Failures</h3>
+            <p className="text-xs text-white/70 leading-relaxed">
               Keyword searches fail because enterprise entries use divergent terminology—e.g. &quot;2 INCH&quot; vs
               &quot;50 NB&quot; vs &quot;50MM&quot;, &quot;SMLS&quot; vs &quot;SEAMLESS&quot;, or &quot;OS&amp;Y&quot;
               vs &quot;OUTSIDE SCREW &amp; YOKE&quot;.
             </p>
           </div>
 
-          <div className="p-6 rounded-xl bg-white border border-slate-200 shadow-sm space-y-3">
-            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700 font-bold">
+          <div className="p-6 rounded-2xl glass-card glass-card-hover space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-white/[0.08] border border-white/10 flex items-center justify-center text-white font-bold font-mono">
               3
             </div>
-            <h3 className="text-base font-semibold text-slate-900">Procurement Opacity</h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
+            <h3 className="text-base font-semibold text-white">Procurement Opacity</h3>
+            <p className="text-xs text-white/70 leading-relaxed">
               Without cross-CPSE code harmonization, public sector oversight cannot calculate consolidated demand,
               identify vendor overlap, or reconcile pricing disparities across enterprises.
             </p>
@@ -271,16 +267,16 @@ export default function LandingPage() {
       </section>
 
       {/* 4. How MATPULSE Works Section */}
-      <section id="workflow" className="py-20 px-4 sm:px-6 lg:px-8 bg-white border-y border-slate-200">
+      <section id="workflow" className="py-20 px-4 sm:px-6 lg:px-8 border-y border-white/10">
         <div className="max-w-7xl mx-auto space-y-12">
           <div className="max-w-3xl space-y-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-blue-700 font-mono">
+            <span className="text-xs font-bold uppercase tracking-wider text-blue-400 font-mono">
               Engineering Architecture
             </span>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
               The 8-Stage Harmonization Pipeline
             </h2>
-            <p className="text-sm text-slate-600 leading-relaxed">
+            <p className="text-sm text-white/70 leading-relaxed">
               MATPULSE resolves catalog divergence through a decoupled, explainable pipeline combining deep
               transformer embeddings, deterministic engineering rule filters, and human-in-the-loop review.
             </p>
@@ -291,18 +287,18 @@ export default function LandingPage() {
               <div
                 key={step.num}
                 onClick={() => setActiveStep(idx)}
-                className={`p-5 rounded-xl border transition cursor-pointer space-y-2 ${
+                className={`p-5 rounded-2xl border transition cursor-pointer space-y-2 ${
                   activeStep === idx
-                    ? 'bg-blue-50/60 border-blue-300 shadow-sm'
-                    : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                    ? 'bg-blue-600/25 border-blue-400/50 shadow-xl shadow-blue-500/10 backdrop-blur-md'
+                    : 'glass-card glass-card-hover'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs font-bold text-blue-700">{step.num}</span>
-                  {activeStep === idx && <IconCheck className="w-4 h-4 text-blue-700" />}
+                  <span className="font-mono text-xs font-bold text-blue-400">{step.num}</span>
+                  {activeStep === idx && <IconCheck className="w-4 h-4 text-blue-400" />}
                 </div>
-                <h3 className="text-sm font-semibold text-slate-900">{step.title}</h3>
-                <p className="text-xs text-slate-600 leading-relaxed">{step.desc}</p>
+                <h3 className="text-sm font-semibold text-white">{step.title}</h3>
+                <p className="text-xs text-white/70 leading-relaxed">{step.desc}</p>
               </div>
             ))}
           </div>
@@ -313,13 +309,13 @@ export default function LandingPage() {
       <section id="intelligence" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <div className="space-y-5">
-            <span className="text-xs font-bold uppercase tracking-wider text-blue-700 font-mono">
+            <span className="text-xs font-bold uppercase tracking-wider text-blue-400 font-mono">
               Intelligence &amp; Safety
             </span>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
               Semantic AI Paired with Deterministic Engineering Rules
             </h2>
-            <p className="text-sm text-slate-600 leading-relaxed">
+            <p className="text-sm text-white/70 leading-relaxed">
               Pure statistical AI models frequently confuse physically non-interchangeable materials if descriptions
               share similar phrasing. MATPULSE combines semantic transformer embeddings with deterministic engineering
               rules to safeguard industrial integrity.
@@ -327,24 +323,24 @@ export default function LandingPage() {
 
             <div className="space-y-3 pt-2">
               <div className="flex items-start gap-3">
-                <IconCheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <IconCheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wide">
                     Semantic Embeddings (all-MiniLM-L6-v2)
                   </h4>
-                  <p className="text-xs text-slate-600 mt-0.5">
+                  <p className="text-xs text-white/70 mt-0.5">
                     Evaluates industrial domain text equivalence and maps conceptual synonyms across CPSE abbreviations.
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <IconCheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <IconCheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wide">
                     Critical Attribute Conflict Guards
                   </h4>
-                  <p className="text-xs text-slate-600 mt-0.5">
+                  <p className="text-xs text-white/70 mt-0.5">
                     If pressure classes (Class 150 vs Class 300) or metallurgy grades (WCB vs SS316) conflict,
                     confidence is deterministically capped at 65%, preventing erroneous auto-acceptance.
                   </p>
@@ -352,12 +348,12 @@ export default function LandingPage() {
               </div>
 
               <div className="flex items-start gap-3">
-                <IconCheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <IconCheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wide">
                     Unit of Measurement (UOM) Cross-Check
                   </h4>
-                  <p className="text-xs text-slate-600 mt-0.5">
+                  <p className="text-xs text-white/70 mt-0.5">
                     Validates packaging and quantity units (e.g. Metric Tonne vs Meter vs Each) before pair evaluation.
                   </p>
                 </div>
@@ -365,56 +361,56 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 text-xs">
-              <span className="font-semibold text-slate-900">Composite Scoring Formula</span>
-              <span className="font-mono text-blue-700 font-bold">100.0% Weight Total</span>
+          <div className="glass-panel rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10 text-xs">
+              <span className="font-semibold text-white">Composite Scoring Formula</span>
+              <span className="font-mono text-blue-400 font-bold">100.0% Weight Total</span>
             </div>
 
             <div className="space-y-3">
               <div>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="font-medium text-slate-700">Semantic Embedding Cosine Similarity</span>
-                  <span className="font-mono font-bold text-slate-900">45%</span>
+                  <span className="font-medium text-white/80">Semantic Embedding Cosine Similarity</span>
+                  <span className="font-mono font-bold text-white">45%</span>
                 </div>
-                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-700 rounded-full w-[45%]" />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="font-medium text-slate-700">Technical Dimension &amp; Grade Rules</span>
-                  <span className="font-mono font-bold text-slate-900">40%</span>
-                </div>
-                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-indigo-600 rounded-full w-[40%]" />
+                <div className="h-2 w-full bg-white/[0.08] rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 rounded-full w-[45%]" />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="font-medium text-slate-700">Category Domain Compatibility</span>
-                  <span className="font-mono font-bold text-slate-900">10%</span>
+                  <span className="font-medium text-white/80">Technical Dimension &amp; Grade Rules</span>
+                  <span className="font-mono font-bold text-white">40%</span>
                 </div>
-                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-teal-600 rounded-full w-[10%]" />
+                <div className="h-2 w-full bg-white/[0.08] rounded-full overflow-hidden">
+                  <div className="h-full bg-indigo-500 rounded-full w-[40%]" />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="font-medium text-slate-700">Unit of Measurement (UOM) Match</span>
-                  <span className="font-mono font-bold text-slate-900">5%</span>
+                  <span className="font-medium text-white/80">Category Domain Compatibility</span>
+                  <span className="font-mono font-bold text-white">10%</span>
                 </div>
-                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-600 rounded-full w-[5%]" />
+                <div className="h-2 w-full bg-white/[0.08] rounded-full overflow-hidden">
+                  <div className="h-full bg-cyan-500 rounded-full w-[10%]" />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="font-medium text-white/80">Unit of Measurement (UOM) Match</span>
+                  <span className="font-mono font-bold text-white">5%</span>
+                </div>
+                <div className="h-2 w-full bg-white/[0.08] rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full w-[5%]" />
                 </div>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 space-y-1">
-              <span className="font-semibold text-slate-800 uppercase tracking-wide block">
+            <div className="p-3.5 rounded-xl bg-white/[0.04] border border-white/10 text-[11px] text-white/70 space-y-1">
+              <span className="font-semibold text-white uppercase tracking-wide block">
                 Explainability Guarantee:
               </span>
               <p>Every recommendation produces itemized reasons, warnings, and exact attribute comparison diffs.</p>
@@ -424,16 +420,16 @@ export default function LandingPage() {
       </section>
 
       {/* 6. Human-in-the-Loop Governance */}
-      <section id="governance" className="py-20 px-4 sm:px-6 lg:px-8 bg-white border-y border-slate-200">
+      <section id="governance" className="py-20 px-4 sm:px-6 lg:px-8 border-y border-white/10">
         <div className="max-w-7xl mx-auto space-y-12">
           <div className="max-w-3xl space-y-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-blue-700 font-mono">
+            <span className="text-xs font-bold uppercase tracking-wider text-blue-400 font-mono">
               Human-in-the-Loop Review
             </span>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
               AI Suggests. Technical Rules Guard. Humans Decide.
             </h2>
-            <p className="text-sm text-slate-600 leading-relaxed">
+            <p className="text-sm text-white/70 leading-relaxed">
               Public sector accountability requires complete domain reviewer authorization before changing material
               records. MATPULSE provides a dedicated human review console where material managers evaluate recommendations,
               view full technical diffs, and approve or reject with immutable reason codes.
@@ -441,34 +437,34 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-              <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
+            <div className="p-6 rounded-2xl glass-card glass-card-hover space-y-3">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center justify-center font-bold text-xs">
                 OK
               </div>
-              <h3 className="text-sm font-semibold text-slate-900">Approve &amp; Assign Common Code</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <h3 className="text-sm font-semibold text-white">Approve &amp; Assign Common Code</h3>
+              <p className="text-xs text-white/70 leading-relaxed">
                 Reviewers confirm equivalence and assign an authoritative Common National Material Code (e.g.
                 NMC-PIP-CS-50NB-40) to both records while keeping internal CPSE codes completely untouched.
               </p>
             </div>
 
-            <div className="p-6 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-              <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-800 flex items-center justify-center font-bold text-xs">
+            <div className="p-6 rounded-2xl glass-card glass-card-hover space-y-3">
+              <div className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-400/30 flex items-center justify-center font-bold text-xs">
                 REJ
               </div>
-              <h3 className="text-sm font-semibold text-slate-900">Reject with Stored Justification</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <h3 className="text-sm font-semibold text-white">Reject with Stored Justification</h3>
+              <p className="text-xs text-white/70 leading-relaxed">
                 Reviewers reject non-equivalent pairs with structured presets (e.g. &quot;Pressure rating mismatch&quot;,
                 &quot;Different metallurgical grade&quot;). Master records remain pristine and unmodified.
               </p>
             </div>
 
-            <div className="p-6 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs">
+            <div className="p-6 rounded-2xl glass-card glass-card-hover space-y-3">
+              <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-400/30 flex items-center justify-center font-bold text-xs">
                 LOG
               </div>
-              <h3 className="text-sm font-semibold text-slate-900">Immutable Audit Trail</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <h3 className="text-sm font-semibold text-white">Immutable Audit Trail</h3>
+              <p className="text-xs text-white/70 leading-relaxed">
                 Every review decision records the exact timestamp, reviewer notes, and algorithm scores, providing
                 complete transparency for CPSE procurement committees and vigilance authorities.
               </p>
@@ -480,59 +476,59 @@ export default function LandingPage() {
       {/* 7. Analytics & Visibility */}
       <section id="analytics" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
         <div className="max-w-3xl space-y-3">
-          <span className="text-xs font-bold uppercase tracking-wider text-blue-700 font-mono">
+          <span className="text-xs font-bold uppercase tracking-wider text-blue-400 font-mono">
             Analytics &amp; Data Quality
           </span>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
             Real-Time Cross-CPSE Harmonization Intelligence
           </h2>
-          <p className="text-sm text-slate-600 leading-relaxed">
+          <p className="text-sm text-white/70 leading-relaxed">
             Directly derived from the FastAPI backend and SQLite master database. No faked statistics or fabricated
             spend metrics.
           </p>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="p-5 rounded-xl bg-white border border-slate-200 shadow-sm space-y-1">
-            <p className="text-[11px] font-semibold text-slate-500 uppercase">CPSE Coverage</p>
-            <p className="text-2xl font-bold font-mono text-slate-900">6 Catalogs</p>
-            <p className="text-[11px] text-slate-400">BHEL, NTPC, ONGC, SAIL, IOCL, CIL</p>
+          <div className="p-5 rounded-2xl glass-card glass-card-hover space-y-1">
+            <p className="text-[11px] font-semibold text-white/50 uppercase font-mono">CPSE Coverage</p>
+            <p className="text-2xl font-bold font-mono text-white">6 Catalogs</p>
+            <p className="text-[11px] text-white/40">BHEL, NTPC, ONGC, SAIL, IOCL, CIL</p>
           </div>
 
-          <div className="p-5 rounded-xl bg-white border border-slate-200 shadow-sm space-y-1">
-            <p className="text-[11px] font-semibold text-slate-500 uppercase">Harmonization Rate</p>
-            <p className="text-2xl font-bold font-mono text-emerald-700">62.5%</p>
-            <p className="text-[11px] text-slate-400">Master records harmonized</p>
+          <div className="p-5 rounded-2xl glass-card glass-card-hover space-y-1">
+            <p className="text-[11px] font-semibold text-white/50 uppercase font-mono">Harmonization Rate</p>
+            <p className="text-2xl font-bold font-mono text-emerald-400">62.5%</p>
+            <p className="text-[11px] text-white/40">Master records harmonized</p>
           </div>
 
-          <div className="p-5 rounded-xl bg-white border border-slate-200 shadow-sm space-y-1">
-            <p className="text-[11px] font-semibold text-slate-500 uppercase">Common Groups</p>
-            <p className="text-2xl font-bold font-mono text-blue-700">2 Groups</p>
-            <p className="text-[11px] text-slate-400">5 original codes unified</p>
+          <div className="p-5 rounded-2xl glass-card glass-card-hover space-y-1">
+            <p className="text-[11px] font-semibold text-white/50 uppercase font-mono">Common Groups</p>
+            <p className="text-2xl font-bold font-mono text-blue-400">2 Groups</p>
+            <p className="text-[11px] text-white/40">5 original codes unified</p>
           </div>
 
-          <div className="p-5 rounded-xl bg-white border border-slate-200 shadow-sm space-y-1">
-            <p className="text-[11px] font-semibold text-slate-500 uppercase">Data Completeness</p>
-            <p className="text-2xl font-bold font-mono text-slate-900">100%</p>
-            <p className="text-[11px] text-slate-400">Zero missing attributes in seed</p>
+          <div className="p-5 rounded-2xl glass-card glass-card-hover space-y-1">
+            <p className="text-[11px] font-semibold text-white/50 uppercase font-mono">Data Completeness</p>
+            <p className="text-2xl font-bold font-mono text-white">100%</p>
+            <p className="text-[11px] text-white/40">Zero missing attributes in seed</p>
           </div>
         </div>
       </section>
 
-      {/* 8. Final Call to Action / Contact */}
-      <section id="contact" className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-900 text-white">
-        <div className="max-w-4xl mx-auto text-center space-y-6">
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+      {/* 8. Final Call to Action */}
+      <section id="contact" className="py-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+        <div className="glass-panel rounded-3xl p-8 sm:p-12 text-center space-y-6">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
             Ready to Inspect the Working MATPULSE Platform?
           </h2>
-          <p className="text-sm text-slate-300 max-w-xl mx-auto leading-relaxed">
+          <p className="text-sm text-white/70 max-w-xl mx-auto leading-relaxed">
             Access the live executive dashboard, browse CPSE material catalogs, test the AI matching engine,
             and review persistent recommendations.
           </p>
           <div className="pt-2">
             <Link
               to="/dashboard"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold shadow-md transition"
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-white hover:bg-white/90 text-black text-xs sm:text-sm font-semibold tracking-wider uppercase transition-all duration-200 hover:scale-105 active:scale-95 shadow-xl"
             >
               <span>Enter MATPULSE Console</span>
               <IconArrowRight className="w-4 h-4" />
@@ -541,27 +537,27 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 9. Global Footer */}
-      <footer className="bg-white border-t border-slate-200 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-500">
+      {/* 9. Global Footer in Glassmorphism */}
+      <footer className="border-t border-white/10 py-12 px-4 sm:px-6 lg:px-8 bg-black/40 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-white/50">
           <div className="space-y-1 text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2">
-              <span className="font-bold font-mono text-slate-900">MATPULSE</span>
+              <span className="font-bold font-mono text-white">MATPULSE</span>
               <span>&bull;</span>
-              <span>Smart India Hackathon Problem Statement 26099</span>
+              <span>Cross-CPSE Material Standardization Platform</span>
             </div>
-            <p>
+            <p className="text-white/40">
               AI-Driven Standardization and Harmonization of Material Codes across Central Public Sector Enterprises.
             </p>
           </div>
 
           <div className="flex items-center gap-6">
-            <Link to="/dashboard" className="hover:text-blue-700 transition">Dashboard</Link>
-            <Link to="/materials" className="hover:text-blue-700 transition">Materials</Link>
-            <Link to="/matching" className="hover:text-blue-700 transition">AI Matching</Link>
-            <Link to="/analytics" className="hover:text-blue-700 transition">Analytics</Link>
-            <Link to="/terms" className="hover:text-blue-700 transition">Terms (Draft)</Link>
-            <Link to="/privacy" className="hover:text-blue-700 transition">Privacy (Draft)</Link>
+            <Link to="/dashboard" className="text-white/60 hover:text-white transition">Dashboard</Link>
+            <Link to="/materials" className="text-white/60 hover:text-white transition">Materials</Link>
+            <Link to="/matching" className="text-white/60 hover:text-white transition">AI Matching</Link>
+            <Link to="/analytics" className="text-white/60 hover:text-white transition">Analytics</Link>
+            <Link to="/terms" className="text-white/60 hover:text-white transition">Terms (Draft)</Link>
+            <Link to="/privacy" className="text-white/60 hover:text-white transition">Privacy (Draft)</Link>
           </div>
         </div>
       </footer>
